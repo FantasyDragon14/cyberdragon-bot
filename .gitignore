@@ -1,2 +1,4 @@
-python-code/key.txt
+token.txt
 .venv
+.env
+python-code/_pycache_
