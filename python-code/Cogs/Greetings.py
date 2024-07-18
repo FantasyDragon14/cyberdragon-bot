@@ -1,11 +1,6 @@
 import discord
-from discord.ext import tasks, commands
-import asyncio
+from discord.ext import commands
 
-class Activity_Roles(commands.Cog):
-        def __init__(self, bot):
-                self.bot = bot
-        
 class Greetings(commands.Cog):
         def __init__(self, bot):
                 self.bot = bot
@@ -18,14 +13,14 @@ class Greetings(commands.Cog):
                         await channel.send(f'Welcome on J4F, {member.mention} ^w^')
                         
         @commands.command()
-        async def hello(self, ctx, *, member:discord.member = None):
+        async def hello(self, ctx, *, member: discord.Member = None):
                 """Says hello"""
                 member = member or ctx.author
                 if self._last_member is None or self._last_member.id != member.id:
                         await ctx.send(f'Hello {member.name}')
                 else:
-                        await ctx.send(f'Hello again, {member.name}~~\n;3c')
+                        await ctx.send(f'Hello again {member.mention}~~\n:3c')
                 self._last_member = member
                 
-if __name__ == '__main__':
-        print("You're not supposed to run this directly...")
+async def setup(bot):
+        await bot.add_cog(Greetings(bot))

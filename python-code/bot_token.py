@@ -1,8 +1,11 @@
 import os
 
+try:
+        from dotenv import load_dotenv
+        load_dotenv()
+finally:
+        pass
 
-#from dotenv import load_dotenv
-#load_dotenv()
 
 def get_token():
         token = os.getenv("TOKEN")
