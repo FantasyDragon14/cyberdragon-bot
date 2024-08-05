@@ -12,7 +12,7 @@ class Greetings(commands.Cog):
                 if channel is not None:
                         await channel.send(f'Welcome on J4F, {member.mention} ^w^')
                         
-        @commands.command()
+        @commands.hybrid_command()
         async def hello(self, ctx, *, member: discord.Member = None):
                 """Says hello"""
                 member = member or ctx.author

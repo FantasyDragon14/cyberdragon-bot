@@ -2,6 +2,9 @@ if __name__ == '__main__':
         print("You're not supposed to run this directly...")
         pass
 
+print("In module Bot __package__, __name__ ==", __package__, __name__)
+
+import asyncio
 import datetime
 import logging
 import os
@@ -14,9 +17,9 @@ from discord.ext import commands
 from discord.ext import tasks
 from aiohttp import ClientSession
 from pathlib import Path
+from .SaveHandler import cogsFolder_name, get_cogsfolder
+from Cogs import Activity_Roles
 
-
-cogs_directory= "Cogs"
 customPrefix = "}"
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
@@ -25,7 +28,7 @@ class CustomBot (commands.Bot):
         client: aiohttp.ClientSession
         _uptime: datetime.datetime = datetime.datetime.now(datetime.UTC)
         
-        def __init__(self, prefix: str, cogs_dir: str):
+        def __init__(self, prefix: str = None):
                 
                 self.logger = logging.getLogger(self.__class__.__name__)
                 self.logger.info("initiating intents")
@@ -50,21 +53,29 @@ class CustomBot (commands.Bot):
                 intents.presences = True
                 
                 self.logger.info("making bot")
-                super().__init__(command_prefix=commands.when_mentioned_or(prefix), intents= intents)
                 
-                self.cogs_dir = cogs_dir
+                if prefix is not None:
+                        super(command_prefix=commands.when_mentioned_or(prefix), intents= intents)
+                else:
+                        print('(no prefix)')
+                        super(command_prefix=commands.when_mentioned, intents= intents)
+                
+                
                 self.synced = False
                 self.logger.info("bot complete")
                 
-        async def _load_extensions(self) -> None:
-                self.logger.info("Loading Extensions from " + self.cogs_dir)
-                if not os.path.isdir(self.cogs_dir):
-                        self.logger.error(f"Extension directory {self.cogs_dir} does not exist.")
+        async def _load_extensions(self, delay: float = 0) -> None:
+                await asyncio.sleep(delay)
+                self.logger.info("Loading Extensions from " + cogsFolder_name)
+                print(get_cogsfolder())
+                if not os.path.isdir(get_cogsfolder()):
+                        self.logger.error(f'Extension directory "{cogsFolder_name}" does not exist.')
                         return
-                for filename in os.listdir(self.cogs_dir):
+                for filename in os.listdir(cogsFolder_name):
                         if filename.endswith(".py") and not filename.startswith("_"):
                                 try:
-                                        await self.load_extension(f"{self.cogs_dir}.{filename[:-3]}")
+                                        print(f"{cogsFolder_name}.{filename[:-3]}")
+                                        await self.load_extension(f'{cogsFolder_name}.{filename[:-3]}')
                                         self.logger.info(f"Loaded extension {filename[:-3]}")
                                 except commands.ExtensionError:
                                         self.logger.error(f"Failed to load extension {filename[:-3]}\n{traceback.format_exc()}")
@@ -75,10 +86,13 @@ class CustomBot (commands.Bot):
         
         async def on_ready(self):
                 print(f"logged in as {self.user}")
+                await self.set_presence()
                 
         async def setup_hook(self) -> None:
+                await self.add_cog(SettingsCMD(self))
                 self.client = aiohttp.ClientSession()
-                await self._load_extensions()
+                #asyncio.create_task(self._load_extensions(1))
+                await self._load_extensions(1)
                 if not self.synced:
                         await self.tree.sync()
                         self.synced = not self.synced
@@ -87,7 +101,9 @@ class CustomBot (commands.Bot):
         async def close(self) -> None:
                 await super().close()
                 await self.client.close()
-                
+#commands: -------------------
+        
+#properties: ----------------------
         @property
         def user(self) -> discord.ClientUser:
                 assert super().user, "Bot is not ready yet"
@@ -97,13 +113,40 @@ class CustomBot (commands.Bot):
         def uptime(self) -> datetime.timedelta:
                 return datetime.datetime.now(datetime.UTC) - self.uptime
         
-bot = CustomBot(customPrefix, cogs_directory)
+#methods: -------------------------------
+        async def set_presence(self, status: discord.Status = None, presence: discord.Game | discord.Streaming | discord.Activity = None):
+                """
+                set the presence (status and/or activity)
+                """
+                if presence == None: presence = discord.CustomActivity(name='Testing', emoji=':computer:')
+                status = discord.Status.dnd
+                await self.change_presence(status= status, activity=presence)
+                pass
+        
+#bot = CustomBot(customPrefix)
+bot = CustomBot()
 
 print("made Bot")
 
-@bot.command(description="test")
+@bot.hybrid_command(description="test")
 async def test(ctx):
         '''test command'''
         print("[test command]")
         await ctx.send("Test")
 print("initiated test command")
+
+
+class SettingsCMD(commands.GroupCog, group_name='settings'):
+        def __init__(self, bot):
+                bot.logger.info("initiating main settings commands")
+                self.bot = bot
+                
+
+        @commands.hybrid_group(name='settings')
+        async def settings(self, ctx):
+                await ctx.send("settings not implemented")
+        
+        @settings.command()
+        async def general(self, ctx):
+                await ctx.send("general not implemented")
+                
