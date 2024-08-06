@@ -8,12 +8,14 @@ import asyncio
 import datetime
 import logging
 import os
+import enum
 import traceback
 import typing
 import aiohttp
 import discord
 import re
 from discord.ext import commands
+from discord import app_commands
 from discord.ext import tasks
 from aiohttp import ClientSession
 from pathlib import Path
@@ -55,31 +57,18 @@ class CustomBot (commands.Bot):
                 self.logger.info("making bot")
                 
                 if prefix is not None:
-                        super(command_prefix=commands.when_mentioned_or(prefix), intents= intents)
+                        super().__init__(command_prefix=commands.when_mentioned_or(prefix), intents= intents)
                 else:
                         print('(no prefix)')
-                        super(command_prefix=commands.when_mentioned, intents= intents)
+                        super().__init__(command_prefix=commands.when_mentioned, intents= intents)
                 
                 
                 self.synced = False
                 self.logger.info("bot complete")
                 
-        async def _load_extensions(self, delay: float = 0) -> None:
-                await asyncio.sleep(delay)
-                self.logger.info("Loading Extensions from " + cogsFolder_name)
-                print(get_cogsfolder())
-                if not os.path.isdir(get_cogsfolder()):
-                        self.logger.error(f'Extension directory "{cogsFolder_name}" does not exist.')
-                        return
-                for filename in os.listdir(cogsFolder_name):
-                        if filename.endswith(".py") and not filename.startswith("_"):
-                                try:
-                                        print(f"{cogsFolder_name}.{filename[:-3]}")
-                                        await self.load_extension(f'{cogsFolder_name}.{filename[:-3]}')
-                                        self.logger.info(f"Loaded extension {filename[:-3]}")
-                                except commands.ExtensionError:
-                                        self.logger.error(f"Failed to load extension {filename[:-3]}\n{traceback.format_exc()}")
-                print(self.cogs)
+        
+        
+
 
         async def on_error(self, event_method: str, *args: typing.Any, **kwargs: typing.Any) -> None:
                 self.logger.error(f"An error occurred in {event_method}.\n{traceback.format_exc()}")
@@ -114,6 +103,100 @@ class CustomBot (commands.Bot):
                 return datetime.datetime.now(datetime.UTC) - self.uptime
         
 #methods: -------------------------------
+        async def _load_extensions(self, delay: float = 0) -> None:
+                await asyncio.sleep(delay)
+                self.logger.info("Loading Extensions from " + cogsFolder_name)
+                print(get_cogsfolder())
+                if not os.path.isdir(get_cogsfolder()):
+                        self.logger.error(f'Extension directory "{cogsFolder_name}" does not exist.')
+                        return
+                for filename in os.listdir(cogsFolder_name):
+                        if filename.endswith(".py") and not filename.startswith("_"):
+                                try:
+                                        print(f"{cogsFolder_name}.{filename[:-3]}")
+                                        await self.load_extension(f'{cogsFolder_name}.{filename[:-3]}')
+                                        self.logger.info(f"Loaded extension {filename[:-3]}")
+                                except commands.ExtensionError:
+                                        self.logger.error(f"Failed to load extension {filename[:-3]}\n{traceback.format_exc()}")
+                extensionList = list(self.extensions.keys())
+                print(extensionList)
+                extensionList.pop(0)
+                print(extensionList)
+
+        async def reload_extensions(self, reload_extension_list=None, load_new:bool=False, unload_extension_list=[]):
+                """
+                reloads all extensions in the folder, or only the extensions with the names in the list. skips not previously loaded extensions, except if load_new is True
+                does not unload removed extensions (yet)
+                """
+                if not os.path.isdir(get_cogsfolder()):
+                        self.logger.error(f'Extension directory "{cogsFolder_name}" does not exist.')
+                        return
+                
+                if len(unload_extension_list) > 0:
+                        self,logger.info("removing extensions")
+                        for e in unload_extension_list:
+                                try :self.unload_extension(e)
+                                except commands.ExtensionNotLoaded:
+                                        self.logger.error(f'extension {filename[:-3]} was not loaded')
+                                except commands.ExtensionNotFound:
+                                        self.logger.error(f"extension {filename[:-3]} could not be removed because it couldn't be found")
+                                else: self.logger.info(f'extension {filename[:-3]} successfully unloaded')
+
+                
+                self.logger.info("Reloading Extensions in " + cogsFolder_name)
+                if reload_extension_list == None: reload_extension_list = list(self.extensions.keys())
+                else:
+                        reload_extension_list = [f"{cogsFolder_name}.{extension_name}" for extension_name in reload_extension_list]
+                print(reload_extension_list)
+                
+                extension_files = os.listdir(cogsFolder_name)
+
+                extension_files = [f"{cogsFolder_name}.{extension_name[:-3]}" for extension_name in extension_files if extension_name.endswith(".py") and not extension_name.startswith("_") ]
+                print(extension_files)
+                
+                #reloading extensions
+                for e in reload_extension_list:
+                        try:
+                                extension_files.remove(e)
+                                print(extension_files)
+                        finally:
+                                try:
+                                        await self.reload_extension(e)
+                                        self.logger.info(f"Loaded extension {e}")
+                                except commands.ExtensionNotFound:
+                                        self.logger.error(f'extension {e} not Found')
+                                except commands.ExtensionNotLoaded:
+                                        self.logger.error(f'extension {e} was not loaded')
+                                        if load_new:
+                                                try:
+                                                        print(e)
+                                                        await self.load_extension(e)
+                                                        self.logger.info(f"Loaded extension {e}")
+                                                except commands.ExtensionError:
+                                                        self.logger.error(f"Failed to load extension {e}\n{traceback.format_exc()}")
+                
+                                except commands.ExtensionError:
+                                        self.logger.error(f"Failed to reload extension {e}\n{traceback.format_exc()}")
+
+                #loading new extensions
+                if load_new:
+                        self.logger.info(f"Loading new extensions: {extension_files}")
+                        for filename in extension_files:
+                                try:
+                                        print(filename)
+                                        await self.load_extension(filename)
+                                        self.logger.info(f"Loaded extension {filename}")
+                                except commands.ExtensionError:
+                                        self.logger.error(f"Failed to load extension {filename}\n{traceback.format_exc()}")
+                        
+                self.logger.info("Finished reloading extensions, syncing Commands...")
+                await self.tree.sync()
+                self.synced = True
+                self.logger.info("done")
+
+
+                
+
         async def set_presence(self, status: discord.Status = None, presence: discord.Game | discord.Streaming | discord.Activity = None):
                 """
                 set the presence (status and/or activity)
@@ -135,18 +218,50 @@ async def test(ctx):
         await ctx.send("Test")
 print("initiated test command")
 
+def check_for_dev_privilege(ctx):
+        dev_list = [
+                432248872845180932, #FantasyDragon14
+        ]
+        print("checking dev")
+        print(f"{ctx.message.author.id} in {dev_list} : {ctx.message.author.id in dev_list}")
+        return ctx.message.author.id in dev_list
+
+class MyBoolEn(str, enum.Enum):
+        Yes = "yes"
+        No = "no"
 
 class SettingsCMD(commands.GroupCog, group_name='settings'):
         def __init__(self, bot):
                 bot.logger.info("initiating main settings commands")
                 self.bot = bot
-                
 
-        @commands.hybrid_group(name='settings')
+        @app_commands.command(name="reload_extensions" )
+        @commands.check(check_for_dev_privilege)
+        async def reload_extensions(self, ctx, load_new: MyBoolEn):
+                await ctx.response.send_message("reloading...")
+                try:
+                        await bot.reload_extensions(load_new=(load_new == "yes"))
+                except:
+                        await ctx.followup.send(f"something went wrong: {traceback.format_exc(limit= 1)}")
+                else:
+                        await ctx.followup.send("Reloaded Extensions")
+
+        @commands.hybrid_command(name= 'dev')
+        @commands.check(check_for_dev_privilege)
+        async def some_command(seld, ctx):
+                await ctx.defer()
+                await asyncio.sleep(10)
+                await ctx.send("you have dev privileges with this bot :3")
+
+        @commands.hybrid_group(name='subsettings', fallback='test')
         async def settings(self, ctx):
-                await ctx.send("settings not implemented")
+                await ctx.send("subsettings not implemented")
         
         @settings.command()
         async def general(self, ctx):
                 await ctx.send("general not implemented")
+
+        @settings.command()
+        async def specific(self, ctx):
+                await ctx.send("specific not implemented")
                 

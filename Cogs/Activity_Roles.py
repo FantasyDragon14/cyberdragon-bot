@@ -8,15 +8,17 @@ class Activity_Roles(commands.Cog):
         def __init__(self, bot: commands.Bot):
                 self.bot = bot
                 self.lock = asyncio.Lock()
-                self.bot.logger.info("Initiating Activity_Roles")
+                self.bot.logger.info("[ActivityRoles] Initiating ActivityRoles")
                 
                 self.add_settings(self.ActivityRoles)
                 
                 for guild in self.bot.guilds:
-                        if self.ActivityRolesEnabled(guild):
+                        result = asyncio.run(self.ActivityRolesEnabled(guild))
+                        if result:
                                 self.repeat_activity.start(guild)
                 
         def cog_unload(self) -> tasks.Coroutine[tasks.Any, tasks.Any, None]:
+                self.bot.logger.info("[ActivityRoles] unloading ActivityRoles")
                 self.repeat_activity.stop()
                 
         def add_settings(self, group_to_add):
@@ -38,7 +40,7 @@ class Activity_Roles(commands.Cog):
                 for member in guild.members:
                         user_message_dict[member] = 0
                 
-                raise NotImplementedError
+                bot.logger.error("Not Implemented yet, WIP")
         
         @commands.hybrid_group(name='activityroles')
         async def ActivityRoles(self, ctx):
@@ -51,7 +53,7 @@ class Activity_Roles(commands.Cog):
                 Settings.setSetting(ctx.guild, self.__class__.__name__, 'toggleAutoRefresh', True)
         
                 
-        @commands.command(name='refresh_activity_roles_now')
+        @commands.hybrid_command(name='refresh_activity_roles_now')
         async def refreshActivityRoles(self, ctx):
                 """the discord-command to manually execute refresh_activity_roles in a guild
                 """

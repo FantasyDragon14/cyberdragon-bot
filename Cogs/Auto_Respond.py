@@ -13,8 +13,7 @@ class Auto_Respond(commands.Cog):
         async def on_message(self, message):
                 if message.author.id == self.bot.user.id:
                         return
-                print(message.content)
-                if re.match('(hello)|(hi)', message.content, re.I):
+                if re.match('(hello)|(hi)|(hallo)', message.content, re.I):
                         await message.reply(random.choice(greetings), mention_author=True)
                 
 async def setup(bot):
