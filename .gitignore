@@ -1,7 +1,7 @@
-token.txt
+token*
 .venv
 .env
 */__pycache__
-python-code/__pycache__
+discord_code/__pycache__
 Cogs/__pycache__
-main_code/__pycache__
+revolt_code/__pycache__
