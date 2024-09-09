@@ -2,7 +2,6 @@ if __name__ == '__main__':
         print("You're not supposed to run this directly...")
         pass
 
-print("In module Bot __package__, __name__ ==", __package__, __name__)
 
 import asyncio
 import datetime
@@ -106,22 +105,16 @@ class CustomBot (commands.Bot):
         async def _load_extensions(self, delay: float = 0) -> None:
                 await asyncio.sleep(delay)
                 self.logger.info("Loading Extensions from " + cogsFolder_name)
-                print(get_cogsfolder())
                 if not os.path.isdir(get_cogsfolder()):
                         self.logger.error(f'Extension directory "{cogsFolder_name}" does not exist.')
                         return
                 for filename in os.listdir(cogsFolder_name):
                         if filename.endswith(".py") and not filename.startswith("_"):
                                 try:
-                                        print(f"{cogsFolder_name}.{filename[:-3]}")
                                         await self.load_extension(f'{cogsFolder_name}.{filename[:-3]}')
                                         self.logger.info(f"Loaded extension {filename[:-3]}")
                                 except commands.ExtensionError:
                                         self.logger.error(f"Failed to load extension {filename[:-3]}\n{traceback.format_exc()}")
-                extensionList = list(self.extensions.keys())
-                print(extensionList)
-                extensionList.pop(0)
-                print(extensionList)
 
         async def reload_extensions(self, reload_extension_list=None, load_new:bool=False, unload_extension_list=[]):
                 """
@@ -133,7 +126,7 @@ class CustomBot (commands.Bot):
                         return
                 
                 if len(unload_extension_list) > 0:
-                        self,logger.info("removing extensions")
+                        self.logger.info("removing extensions")
                         for e in unload_extension_list:
                                 try :self.unload_extension(e)
                                 except commands.ExtensionNotLoaded:
@@ -142,23 +135,20 @@ class CustomBot (commands.Bot):
                                         self.logger.error(f"extension {filename[:-3]} could not be removed because it couldn't be found")
                                 else: self.logger.info(f'extension {filename[:-3]} successfully unloaded')
 
-                
-                self.logger.info("Reloading Extensions in " + cogsFolder_name)
                 if reload_extension_list == None: reload_extension_list = list(self.extensions.keys())
                 else:
                         reload_extension_list = [f"{cogsFolder_name}.{extension_name}" for extension_name in reload_extension_list]
-                print(reload_extension_list)
-                
+                self.logger.info(f"Reloading these Extensions: {reload_extension_list}")
                 extension_files = os.listdir(cogsFolder_name)
 
                 extension_files = [f"{cogsFolder_name}.{extension_name[:-3]}" for extension_name in extension_files if extension_name.endswith(".py") and not extension_name.startswith("_") ]
-                print(extension_files)
+                self.logger.info(f"Extensions in Directory:    {extension_files}")
                 
                 #reloading extensions
                 for e in reload_extension_list:
                         try:
                                 extension_files.remove(e)
-                                print(extension_files)
+                                print(f"removed {e} from list")
                         finally:
                                 try:
                                         await self.reload_extension(e)
@@ -169,7 +159,6 @@ class CustomBot (commands.Bot):
                                         self.logger.error(f'extension {e} was not loaded')
                                         if load_new:
                                                 try:
-                                                        print(e)
                                                         await self.load_extension(e)
                                                         self.logger.info(f"Loaded extension {e}")
                                                 except commands.ExtensionError:
@@ -183,7 +172,6 @@ class CustomBot (commands.Bot):
                         self.logger.info(f"Loading new extensions: {extension_files}")
                         for filename in extension_files:
                                 try:
-                                        print(filename)
                                         await self.load_extension(filename)
                                         self.logger.info(f"Loaded extension {filename}")
                                 except commands.ExtensionError:
@@ -242,7 +230,7 @@ class SettingsCMD(commands.GroupCog, group_name='settings'):
                 try:
                         await bot.reload_extensions(load_new=(load_new == "yes"))
                 except:
-                        await ctx.followup.send(f"something went wrong: {traceback.format_exc(limit= 1)}")
+                        await ctx.followup.send(f"something went wrong")
                 else:
                         await ctx.followup.send("Reloaded Extensions")
 

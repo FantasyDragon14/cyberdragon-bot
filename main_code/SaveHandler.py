@@ -41,7 +41,7 @@ class Settings:
                 raise NotImplementedError
         
         @staticmethod
-        async def getSetting(guild, settingsExtension: str, settingname:str, defaultvalue = None):
+        def getSetting(guild, settingsExtension: str, settingname:str, defaultvalue = None):
                 """provides the value of the setting with the given name.
                 if the setting does not exist, it is created with the given defaultvalue
 
@@ -58,7 +58,7 @@ class Settings:
                 return settingvalue
         
         @staticmethod
-        async def setSetting(guild, settingsExtension, settingname:str, newValue):
+        def setSetting(guild, settingsExtension, settingname:str, newValue):
                 """sets the value of the setting with the given name.
                 if the setting does not exist, it is created with the given value
 

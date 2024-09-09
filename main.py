@@ -24,7 +24,4 @@ if __name__ == "__main__":
     
     bot.run(bot_token.get_token())
     
-    print("Commands: ------------------------------------------------------------------------")
-    print(bot.commands)
-    for c in bot.commands:
-        print(c.name)
+    print("stopped")

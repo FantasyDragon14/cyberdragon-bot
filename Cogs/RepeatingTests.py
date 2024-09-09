@@ -6,6 +6,7 @@ class RepeatingTests(commands.Cog):
         def __init__(self, bot):
                 self.bot = bot
                 self.loop_channel = None
+                self.bot.logger.info("[RepeatingTests] starting Repeating Tests")
                 
         '''
         async def setup_hook(self):
@@ -26,8 +27,9 @@ class RepeatingTests(commands.Cog):
                 
         @tasks.loop(seconds=10)
         async def repeat_refresh(self, ctx):
-                print(f"refresh: {self.repeat_refresh.current_loop}")
+                print(f"loop: {self.repeat_refresh.current_loop}")
                 await self.loop_channel.send(f"ping {self.repeat_refresh.current_loop}")
         
 async def setup(bot):
+        bot.logger.info("[RepeatingTests] loading Repeating Tests")
         await bot.add_cog(RepeatingTests(bot))

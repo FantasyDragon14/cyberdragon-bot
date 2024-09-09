@@ -12,23 +12,28 @@ class Activity_Roles(commands.Cog):
                 
                 self.add_settings(self.ActivityRoles)
                 
-                for guild in self.bot.guilds:
-                        result = asyncio.run(self.ActivityRolesEnabled(guild))
-                        if result:
-                                self.repeat_activity.start(guild)
-                
+                try:
+                        for guild in self.bot.guilds:
+                                result = asyncio.run(self.ActivityRolesEnabled(guild))
+                                if result:
+                                        self.repeat_activity.start(guild)
+                finally:
+                        pass
+
+
         def cog_unload(self) -> tasks.Coroutine[tasks.Any, tasks.Any, None]:
                 self.bot.logger.info("[ActivityRoles] unloading ActivityRoles")
                 self.repeat_activity.stop()
                 
+                
         def add_settings(self, group_to_add):
                 #self.bot.get_cog("SettingsCMD").app_command.add_command(self.ActivityRoles)
-                print(self.bot.commands)
+                #print(self.bot.commands)
                 ls = list(self.bot.commands)
-                for c in ls:
-                        print(c.name)
+                #for c in ls:
+                #        print(c.name)
                 cmd = [c for c in ls if c.name == 'settings']
-                print(cmd)
+                #print(cmd)
                 
         async def refresh_activity_roles(self, guild:discord.Guild):
                 """Refreshes all activity roles for a given guild
@@ -40,7 +45,7 @@ class Activity_Roles(commands.Cog):
                 for member in guild.members:
                         user_message_dict[member] = 0
                 
-                bot.logger.error("Not Implemented yet, WIP")
+                self.bot.logger.error("Not Implemented yet, WIP")
         
         @commands.hybrid_group(name='activityroles')
         async def ActivityRoles(self, ctx):

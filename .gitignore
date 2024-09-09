@@ -1,4 +1,7 @@
 token.txt
 .venv
 .env
-python-code/_pycache_
+*/__pycache__
+python-code/__pycache__
+Cogs/__pycache__
+main_code/__pycache__

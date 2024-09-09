@@ -6,6 +6,7 @@ class Greetings(commands.Cog):
         def __init__(self, bot):
                 self.bot = bot
                 self._last_member = None
+                self.bot.logger.info("[Greetings] starting Greetings")
 
         @commands.Cog.listener()
         async def on_member_join(self, member):
@@ -36,4 +37,5 @@ class Greetings(commands.Cog):
                 self._last_member = member
                 
 async def setup(bot):
+        bot.logger.info("[Greetings] starting Greetings")
         await bot.add_cog(Greetings(bot))
