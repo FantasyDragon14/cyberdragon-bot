@@ -1,7 +1,4 @@
+node_*
 token*
 .venv
 .env
-*/__pycache__
-discord_code/__pycache__
-Cogs/__pycache__
-revolt_code/__pycache__
