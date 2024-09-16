@@ -1,7 +1,7 @@
 {
   "name": "cyberdragon-bot",
-  "version": "1.0.0",
-  "description": "discord bot",
+  "version": "0.0.1",
+  "description": "revolt bot",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -12,6 +12,6 @@
   "dependencies": {
     "discord.js": "^14.*",
     "dotenv": "^16.*",
-    "revolt.js": "^5.2.0"
+    "revolt.js": "^7.0.3"
   }
 }
