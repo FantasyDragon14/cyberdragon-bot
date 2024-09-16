@@ -9,8 +9,8 @@
   "author": "",
   "license": "GNU General Public License",
   "dependencies": {
-    "discord.js": "^14.16.2",
-    "dotenv": "^16.4.5",
-    "revolt.js": "^5.2.8"
+    "discord.js": "^14.*",
+    "dotenv": "^16.*",
+    "revolt.js": "^5.2.0"
   }
 }
