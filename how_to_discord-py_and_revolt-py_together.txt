@@ -1,0 +1,76 @@
+[object Object]
+Yesterday at 08:28 PM
+
+Cause you have aiohttp 3.9
+[
+08:28 PM
+]
+
+3.8*
+amycatgirl
+Yesterday at 08:28 PM
+
+you use import "dotenv/config" or something along those lines
+[object Object]
+Yesterday at 08:29 PM
+
+pip uninstall discord.py aiohttp nextcord py-cord disnake discord.py-self
+[
+08:29 PM
+]
+
+this uninstalls all d.py forks (including dpy itself)
+[
+08:29 PM
+]
+
+then you do pip install -U --force-reinstall discord.py
+[
+08:29 PM
+]
+
+you can
+[
+08:30 PM
+]
+
+install master branch
+[
+08:30 PM
+]
+
+git+https://github.com/revoltchat/revolt.py@master
+FantasyDragon14🐉
+Yesterday at 08:30 PM
+
+turns out this is a pretty common googled (using duckduckgo) question, it works now ^w^
+amycatgirl
+Yesterday at 08:31 PM
+
+I know this because I also use dotenv in my bots :3
+[object Object]
+Yesterday at 08:31 PM
+
+python-dotenv my beloved
+FantasyDragon14🐉
+Yesterday at 08:33 PM
+
+with just that command or pip install ***?
+amycatgirl
+Yesterday at 08:35 PM
+
+pip install git+https://github.com/revoltchat/revolt.py@master i assume
+[object Object]
+Yesterday at 08:37 PM
+
+yes
+FantasyDragon14🐉
+Yesterday at 08:38 PM
+(edited)
+
+ok i can't test revolt.py rn because i don't have the code yet, but so far everything seems to be working ^w^
+thanks for the help *girl and object Object :3
+amycatgirl
+Yesterday at 08:38 PM
+
+np :3
