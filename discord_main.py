@@ -2,11 +2,11 @@
 Run this file to use the bot
 """
 from pathlib import Path
-from discord_code import SaveHandler
+from discord_python import SaveHandler
 
-from discord_code.Bot import bot
+from discord_python.Bot import bot
 import os
-from discord_code import bot_token
+from discord_python import bot_token
 
 os.chdir(Path(__file__).parent.absolute())
 

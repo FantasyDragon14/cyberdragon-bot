@@ -1,6 +1,6 @@
 import asyncio
 import datetime
-from discord_code.SaveHandler import Settings
+from discord_python.SaveHandler import Settings
 import discord
 from discord.ext import tasks, commands
 
