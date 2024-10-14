@@ -89,9 +89,9 @@ class CustomBot (commands.Bot):
         async def close(self) -> None:
                 await super().close()
                 await self.client.close()
-#commands: -------------------
+        #commands: -------------------
         
-#properties: ----------------------
+        #properties: ----------------------
         @property
         def user(self) -> discord.ClientUser:
                 assert super().user, "Bot is not ready yet"
@@ -101,7 +101,7 @@ class CustomBot (commands.Bot):
         def uptime(self) -> datetime.timedelta:
                 return datetime.datetime.now(datetime.UTC) - self.uptime
         
-#methods: -------------------------------
+        #methods: -------------------------------
         async def _load_extensions(self, delay: float = 0) -> None:
                 await asyncio.sleep(delay)
                 self.logger.info("Loading Extensions from " + cogsFolder_name)
@@ -199,11 +199,11 @@ bot = CustomBot()
 
 print("made Bot")
 
-@bot.hybrid_command(description="test")
+@bot.hybrid_command(description="test 1")
 async def test(ctx):
         '''test command'''
-        print("[test command]")
-        await ctx.send("Test")
+        print("[test command in main]")
+        await ctx.send("Test 1")
 print("initiated test command")
 
 def check_for_dev_privilege(ctx):
