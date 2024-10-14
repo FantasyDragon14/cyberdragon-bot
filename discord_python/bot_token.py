@@ -8,9 +8,9 @@ finally:
 
 
 def get_token():
-        token = os.getenv("TOKEN")
+        token = os.getenv("DISCORD_TOKEN")
         if token == None:
-                print("Environment-Variable 'TOKEN' not found. Trying to find a token in token.txt:")
+                print("Environment-Variable 'DISCORD_TOKEN' not found. Trying to find a token in token_discord.txt:")
                 try:
                         with open("token_discord.txt", 'r') as t:
                                 token = t.read()
