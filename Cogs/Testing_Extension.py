@@ -42,7 +42,11 @@ class Test(commands.Cog):
         async def members(self, ctx: commands.Context, attribute: MyAttributeEn):
                 """lists members for the server in terminal (and in chat). List with an attribute (optional)"""
                 await ctx.defer()
-                await ctx.send(f"Members of {ctx.guild.name}: \n")
+                header = f"Members of {ctx.guild.name}"
+                if attribute != "":
+                        header += "+ " + attribute
+                        
+                await ctx.send(header + ":")
                 
                 print("[DEBUG] Members: " + str([g.name for g in ctx.guild.members]))
                 
