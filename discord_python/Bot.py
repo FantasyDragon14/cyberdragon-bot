@@ -2,7 +2,6 @@ if __name__ == '__main__':
         print("You're not supposed to run this directly...")
         pass
 
-
 import asyncio
 import datetime
 import logging
@@ -21,7 +20,7 @@ from pathlib import Path
 from .SaveHandler import cogsFolder_name, get_cogsfolder
 from Cogs import Activity_Roles
 
-customPrefix = "}"
+customPrefix = ":3 "
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
 
@@ -65,10 +64,6 @@ class CustomBot (commands.Bot):
                 self.synced = False
                 self.logger.info("bot complete")
                 
-        
-        
-
-
         async def on_error(self, event_method: str, *args: typing.Any, **kwargs: typing.Any) -> None:
                 self.logger.error(f"An error occurred in {event_method}.\n{traceback.format_exc()}")
         
@@ -180,10 +175,7 @@ class CustomBot (commands.Bot):
                 self.logger.info("Finished reloading extensions, syncing Commands...")
                 await self.tree.sync()
                 self.synced = True
-                self.logger.info("done")
-
-
-                
+                self.logger.info("done")            
 
         async def set_presence(self, status: discord.Status = None, presence: discord.Game | discord.Streaming | discord.Activity = None):
                 """
@@ -192,7 +184,6 @@ class CustomBot (commands.Bot):
                 if presence == None: presence = discord.CustomActivity(name='Testing', emoji=':computer:')
                 status = discord.Status.dnd
                 await self.change_presence(status= status, activity=presence)
-                pass
         
 #bot = CustomBot(customPrefix)
 bot = CustomBot()
@@ -219,9 +210,19 @@ class MyBoolEn(str, enum.Enum):
         No = "no"
 
 class SettingsCMD(commands.GroupCog, group_name='settings'):
-        def __init__(self, bot):
+        def __init__(self, bot:commands.Bot):
                 bot.logger.info("initiating main settings commands")
                 self.bot = bot
+
+        @commands.hybrid_command(description="syncs application commands for this guild/server")
+        async def sync(self, ctx):
+                ctx.defer()
+                sync_cmds = await self.bot.tree.sync(ctx.guild)
+                self.synced = True
+                msg = "synced Commands: "
+                for cmd in sync_cmds:
+                        msg += f"{cmd}, "
+                self.logger.info(msg)
 
         @app_commands.command(name="reload_extensions" )
         @commands.check(check_for_dev_privilege)

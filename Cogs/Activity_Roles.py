@@ -22,8 +22,8 @@ class Activity_Roles(commands.Cog):
                         try:
                                 self.bot.logger.info("[ActivityRoles] refreshing for " + guild.name)
                                 await self.refresh_activity_roles(guild)
-                        except (e):
-                                self.bot.logger.error("[ActivityRoles] error refreshing " + guild.name)
+                        except Exception:
+                                self.bot.logger.error(f"[ActivityRoles] error refreshing {guild.name}: {traceback.format_exc()}")
                                 
                 
         async def refresh_activity_roles(self, guild:discord.Guild):

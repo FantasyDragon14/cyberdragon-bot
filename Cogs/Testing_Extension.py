@@ -1,7 +1,15 @@
+import enum
 from discord import app_commands
 from discord.app_commands import tree
 from discord.ext import commands
 import discord
+
+import discord.ext
+
+
+class MyAttributeEn(str, enum.Enum):
+        DateJoined = "joindate"
+        DateCreated = "creationdate"
 
 class Test(commands.Cog):
         def __init__(self, bot: commands.Bot) -> None:
@@ -32,16 +40,25 @@ class Test(commands.Cog):
                 
                 
         @commands.hybrid_command(name="list_members")
-        async def members(self, ctx):
+        async def members(self, ctx: commands.Context, attribute: MyAttributeEn):
                 """lists members for the server in terminal (and in chat)"""
                 await ctx.defer()
                 msg = f"Members of {ctx.guild.name}: \n"
                 for i, member in enumerate(ctx.guild.members):
-                        msg += f"{i}.\t{member.nick or member.name}\n"
+                        msg += f"{i}.\t{member.nick or member.name}"
+                        
+
+                        match attribute:
+                                case "joindate":
+                                        msg += str(member.joined_at)
+                                        break
+                                case "creationdate":
+                                        msg += str(member.created_at)
+
+                        msg += "\n"
                 print(msg)
                 await ctx.send(msg)
                 print("done")
-        
         
                 
 async def setup(bot):
