@@ -123,7 +123,8 @@ class CustomBot (commands.Bot):
                 if len(unload_extension_list) > 0:
                         self.logger.info("removing extensions")
                         for e in unload_extension_list:
-                                try :self.unload_extension(e)
+                                try:
+                                        self.unload_extension(e)
                                 except commands.ExtensionNotLoaded:
                                         self.logger.error(f'extension {filename[:-3]} was not loaded')
                                 except commands.ExtensionNotFound:
@@ -197,7 +198,7 @@ async def test(ctx):
         await ctx.send("Test 1")
 print("initiated test command")
 
-def check_for_dev_privilege(ctx):
+def check_for_dev_privilege(ctx: commands.Context):
         dev_list = [
                 432248872845180932, #FantasyDragon14
         ]
@@ -214,7 +215,7 @@ class SettingsCMD(commands.GroupCog, group_name='settings'):
                 bot.logger.info("initiating main settings commands")
                 self.bot = bot
 
-        @commands.hybrid_command(description="syncs application commands for this guild/server")
+        @commands.hybrid_command(name="sync_cmds", description="syncs application commands for this guild/server")
         async def sync(self, ctx):
                 ctx.defer()
                 sync_cmds = await self.bot.tree.sync(ctx.guild)

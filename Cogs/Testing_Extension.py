@@ -3,13 +3,14 @@ from discord import app_commands
 from discord.app_commands import tree
 from discord.ext import commands
 import discord
-
 import discord.ext
-
+from discord_python import utils
 
 class MyAttributeEn(str, enum.Enum):
+        No = ""
         DateJoined = "joindate"
         DateCreated = "creationdate"
+        TopRole = "top role"
 
 class Test(commands.Cog):
         def __init__(self, bot: commands.Bot) -> None:
@@ -27,8 +28,6 @@ class Test(commands.Cog):
                         )
                 self.bot.tree.add_command(self.ctx_menu) # add the context menu to the tree
 
-
-
         @commands.hybrid_command(name="test2", description="test2")
         async def test(self, ctx):
                 '''test command'''
@@ -41,23 +40,34 @@ class Test(commands.Cog):
                 
         @commands.hybrid_command(name="list_members")
         async def members(self, ctx: commands.Context, attribute: MyAttributeEn):
-                """lists members for the server in terminal (and in chat)"""
+                """lists members for the server in terminal (and in chat). List with an attribute (optional)"""
                 await ctx.defer()
-                msg = f"Members of {ctx.guild.name}: \n"
+                await ctx.send(f"Members of {ctx.guild.name}: \n")
+                
+                print("[DEBUG] Members: " + str([g.name for g in ctx.guild.members]))
+                
+                msg = ""
                 for i, member in enumerate(ctx.guild.members):
-                        msg += f"{i}.\t{member.nick or member.name}"
-                        
-
+                        line = f"{i + 1}.\t{member.nick or member.name}"
+                
                         match attribute:
+                                case "":
+                                        line += ""
                                 case "joindate":
-                                        msg += str(member.joined_at)
-                                        break
+                                        line += "\t| " + str(member.joined_at)
                                 case "creationdate":
-                                        msg += str(member.created_at)
-
-                        msg += "\n"
-                print(msg)
-                await ctx.send(msg)
+                                        line += "\t| " + str(member.created_at)
+                                case "top role":
+                                        line += "\t| " + str(member.top_role)
+                        msg += line + "\n"
+                        
+                print("[DEBUG] splitting message into:")
+                messages = utils.split_message(msg)
+                print(messages)
+                for s in messages:
+                        print("[DEBUG] sending " + s)
+                        await ctx.send(s)
+                
                 print("done")
         
                 
