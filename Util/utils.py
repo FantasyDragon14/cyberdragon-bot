@@ -1,4 +1,13 @@
 import random
+import lightbulb
+
+dev_ids = [
+    432248872845180932, #FantasyDragon14
+    #944287847630921768, #eternalfloof
+]
+# @lightbulb.Check
+# def check_dev(ctx: lightbulb.Context) -> bool:
+#     return ctx.author.id in dev_ids
         
 def split_message(s:str, maxchars:int=2000, separator="\n") -> list:
     maxchars = maxchars - int(maxchars*0.05)
