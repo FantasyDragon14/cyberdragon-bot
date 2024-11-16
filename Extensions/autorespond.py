@@ -10,7 +10,7 @@ loader = commands.Loader()
 
 @loader.listener(hikari.MessageCreateEvent)
 async def on_message(event: hikari.MessageCreateEvent):
-	if not event.is_human(): return
+	if not event.is_human: return
 	
 	action = await parse_content(event.message.content)
 
@@ -53,7 +53,7 @@ async def hello(event: hikari.MessageCreateEvent):
 	pass
 
 
-async def parse_content(message:str):
+async def parse_content(message):
 	"""decides based on message content which function to execute
 
 	#TODO does not distinguish reply, interaction, normal message so far
@@ -64,6 +64,9 @@ async def parse_content(message:str):
 	Returns:
 		function: the function to handle this message
 	"""
+	print("Parsing message:")
+	print(message)
+	if message is None: return
 	#TODO do this properly with the right regex and shit
 	if re.match('(hello)|(hi)|(hallo)', message, re.I):
 		return hello
