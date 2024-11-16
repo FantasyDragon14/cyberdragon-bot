@@ -28,6 +28,9 @@ intents = (
     | hikari.Intents.GUILD_MESSAGES  # activity
     | hikari.Intents.GUILD_MESSAGE_TYPING  # activity
     | hikari.Intents.GUILD_VOICE_STATES  # activity
+    | hikari.Intents.MESSAGE_CONTENT
+
+    | hikari.Intents.ALL_DMS
 )
 
 bot = hikari.GatewayBot(token= token, intents= intents, logs= "DEBUG") #create bot.  logs= "DEBUG" | "TRACE_HIKARI"
@@ -67,6 +70,7 @@ async def on_starting(_: hikari.StartingEvent) -> None:
 async def on_started(_: hikari.StartedEvent) -> None:
     print("setting bot status")
     await bot.update_presence(activity= hikari.Activity(name="Testing", state="test", type= hikari.ActivityType.CUSTOM), status= hikari.presences.Status.DO_NOT_DISTURB)
+    await client.sync_application_commands()
     
 @commands.hook(commands.ExecutionSteps.CHECKS)
 async def dev(self, pl: commands.ExecutionPipeline, _: commands.Context) -> None:
@@ -99,7 +103,7 @@ class reload_ext(
         await ctx.respond("reloaded extensions")
         print("complete")
 
-#register a reload settings command
+#register a reload settings files command
 #TODO 
         
 bot.run() #run the bot
