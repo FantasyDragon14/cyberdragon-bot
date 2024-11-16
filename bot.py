@@ -7,6 +7,8 @@ import random
 import os
 import Extensions
 
+import Extensions.activityroles
+import Extensions.testing
 from Util import utils
 
 # Unix optimizations
@@ -28,8 +30,9 @@ intents = (
     | hikari.Intents.GUILD_VOICE_STATES  # activity
 )
 
-bot = hikari.GatewayBot(token= token, intents= intents, logs= "DEBUG") #create bot
+bot = hikari.GatewayBot(token= token, intents= intents, logs= "DEBUG") #create bot.  logs= "DEBUG" | "TRACE_HIKARI"
 client = commands.client_from_app(bot) #create lightbulb client from bot to use for lightbulb stuff
+bot.subscribe(hikari.StartingEvent, client.start)
 
 activities = [
     hikari.Activity(name="the code for changes", type= hikari.ActivityType.WATCHING),
@@ -55,8 +58,10 @@ async def bot_status():
 async def on_starting(_: hikari.StartingEvent) -> None:
     # Load any extensions
     await client.load_extensions_from_package(Extensions)
+    print("loaded Extensions, starting client:")
     # Start the bot - make sure commands are synced properly
     await client.start()
+    print("started client")
     
 @bot.listen(hikari.StartedEvent) #execute after the bot has started
 async def on_started(_: hikari.StartedEvent) -> None:
@@ -69,22 +74,32 @@ async def dev(self, pl: commands.ExecutionPipeline, _: commands.Context) -> None
     if _.user.id not in utils.dev_ids:
         raise RuntimeError("only devs can use this command")
 
+#register a reload-extensions command
 @client.register
 class reload_ext(
     commands.SlashCommand,
     name="reload_ext",
     description="reloads Extensions",
-    hooks=[dev]
+    hooks=[dev],
+    
 ):
     @commands.invoke
     async def invoke(self, ctx: commands.Context) -> None:
         await ctx.defer()
-        print("reloading extensions")
-        await client.reload_extensions()
+        mypath = "Extensions"
+        extensions = []
+        for f in os.listdir(mypath):
+            if os.path.isfile(os.path.join(mypath, f)) and not f.startswith("_"):
+                extensions.append(f)
+        print("reloading extensions:")
+        #extensions = [os.path.join(mypath, name) for name in extensions]
+        extensions = [mypath+"."+name[:-3] for name in extensions]
+        print(extensions)
+        await client.reload_extensions(*extensions) 
         await ctx.respond("reloaded extensions")
         print("complete")
-        
-    
-    
 
+#register a reload settings command
+#TODO 
+        
 bot.run() #run the bot
