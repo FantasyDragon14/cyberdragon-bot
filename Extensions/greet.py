@@ -18,6 +18,8 @@ async def member_joined(event: hikari.MemberCreateEvent) -> None:
 
     #TODO make this message customizable in settings, maybe even per server
     msg = f"{event.member.mention} welcome to {guild_name} ^w^"
+    if hikari.Guilds.GuildMemberFlags.DID_REJOIN in event.member.flags:
+        msg = f"Welcome back {event.member.mention}!"
     print("sending " + msg)
     await event.app.rest.create_message(guild.system_channel_id, msg)
     pass
