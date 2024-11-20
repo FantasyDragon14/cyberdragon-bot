@@ -1,9 +1,10 @@
 node_*
 token*
 .venv
+.linuxenv
 .env
-*/__pycache__
-discord_code/__pycache__
-Cogs/__pycache__
-revolt_code/__pycache__
+__pycache__
 _example*
+
+#Data/*
+!Data/default*

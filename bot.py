@@ -1,4 +1,5 @@
 
+import traceback
 from dotenv import load_dotenv
 import hikari
 import lightbulb as commands
@@ -50,10 +51,16 @@ status = [
 #change the bots status every s=60 / m=1 minute
 @client.task(commands.uniformtrigger(minutes=1))
 async def bot_status():
-    print("Changing bot status")
+    print("Trying to change status")
     act = random.choice(activities)
     stat = random.choice(status)
-    await bot.update_presence(activity=act, status= stat)
+    try:
+        await bot.update_presence(activity=act, status= stat)
+        print("changed status")
+    except:
+        traceback.print_exception()
+        print("trying again later")
+
     
 #miru.install(bot) #if i should use miru
 
@@ -101,6 +108,7 @@ class reload_ext(
         print(extensions)
         await client.reload_extensions(*extensions) 
         await ctx.respond("reloaded extensions")
+        await client.sync_application_commands()
         print("complete")
 
 #register a reload settings files command

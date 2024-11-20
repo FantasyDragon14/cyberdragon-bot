@@ -1,10 +1,16 @@
+import os
+import sys
 import hikari
 import lightbulb as commands
 import asyncio
 
+#from bot import dev
+
 loader = commands.Loader()
 
 print("-----------------------\n\tTesting...\n-----------------------")
+
+
 
 @loader.command
 class test(
@@ -32,3 +38,16 @@ class HelloWorld(
     @commands.invoke
     async def invoke(self, ctx: commands.Context) -> None:
         await ctx.respond("Hello World!")
+
+@loader.command
+class Restart_Bot(
+    commands.SlashCommand,
+    name="restart_completely",
+    description="Restarts the bot completely for testing. needs dev privileges",
+    hooks=[commands.prefab.owner_only],
+):
+    @commands.invoke
+    async def invoke(self, ctx: commands.Context) -> None:
+        python = sys.executable
+        await ctx.respond("restarting, done if I'm online again")
+        os.execl(python, python, *sys.argv)
