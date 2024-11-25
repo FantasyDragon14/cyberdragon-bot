@@ -5,6 +5,5 @@ token*
 .env
 __pycache__
 _example*
-
-#Data/*
+Data/*
 !Data/default*

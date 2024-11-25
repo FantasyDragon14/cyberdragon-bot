@@ -17,9 +17,6 @@ async def on_message(event: hikari.MessageCreateEvent):
 	if action != None:
 		await action(event)
 
-hello_content = [
-	 "hi*",
-]
 hello_response = [
 	"Hello!",
 	"Hi!",
@@ -68,7 +65,7 @@ async def parse_content(message):
 	print(message)
 	if message is None: return
 	#TODO do this properly with the right regex and shit
-	if re.match('(hello)|(hi)|(hallo)', message, re.I):
+	if re.search(r"h(i+|(a|e)llo)\W*([\s]|$)", message, re.I):
 		return hello
 	#TODO implement other reactions
 	return None
