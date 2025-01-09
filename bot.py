@@ -6,11 +6,12 @@ import lightbulb as commands
 from lightbulb import tasks
 import random
 import os
+from Util import data
+from Util import utils
 import Extensions
 
 import Extensions.activityroles
 import Extensions.testing
-from Util import utils
 
 # Unix optimizations
 # https://github.com/hikari-py/hikari#uvloop
@@ -107,7 +108,7 @@ class reload_ext(
         extensions = [mypath+"."+name[:-3] for name in extensions]
         print(extensions)
         await client.reload_extensions(*extensions) 
-        await ctx.respond("reloaded extensions")
+        await ctx.respond("reloaded extensions, syncing commands")
         await client.sync_application_commands()
         print("complete")
 
