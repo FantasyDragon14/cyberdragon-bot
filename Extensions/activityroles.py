@@ -3,12 +3,16 @@ assigns roles based on activity in the server
 """
 import hikari
 import lightbulb as commands
+import sqlite3
 
 loader = commands.Loader()
 
 async def index_guild(guild:hikari.GatewayGuild, max_time, ):
     
     pass
+
+
+
 
 """
 TODO: implement this list:

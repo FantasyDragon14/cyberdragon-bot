@@ -35,7 +35,7 @@ intents = (
     | hikari.Intents.ALL_DMS
 )
 
-bot = hikari.GatewayBot(token= token, intents= intents, logs= "DEBUG") #create bot.  logs= "DEBUG" | "TRACE_HIKARI"
+bot = hikari.GatewayBot(token= token, intents= intents, logs= "INFO") #create bot.  logs= "DEBUG" | "TRACE_HIKARI"
 client = commands.client_from_app(bot) #create lightbulb client from bot to use for lightbulb stuff
 bot.subscribe(hikari.StartingEvent, client.start)
 

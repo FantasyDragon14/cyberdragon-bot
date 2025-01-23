@@ -3,14 +3,22 @@ import sys
 import hikari
 import lightbulb as commands
 import asyncio
+import sqlite3
 
 #from bot import dev
+
+class CustomLoader(commands.Loader):
+    pass
+    async def remove_from_client(self, client: commands.Client) -> None:
+        #unload / close db connections here?
+        return await super().remove_from_client(client)
+
 
 loader = commands.Loader()
 
 print("-----------------------\n\tTesting...\n-----------------------")
 
-
+db = sqlite3.connect("./Data/DB/test.db")
 
 @loader.command
 class test(

@@ -65,7 +65,7 @@ async def parse_content(message):
 	print(message)
 	if message is None: return
 	#TODO do this properly with the right regex and shit
-	if re.search(r"h(i+|(a|e)llo)\W*([\s]|$)", message, re.I):
+	if re.search(r"(^|\s+)h(i+|(a|e)llo)\W*([\s]|$)", message, re.I):
 		return hello
 	#TODO implement other reactions
 	return None
