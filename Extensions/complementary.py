@@ -34,12 +34,19 @@ class Complement(
     # target = commands.mentionable("Target", "who will be pinged",) #while it would be very funny, i don't think allowing people to ping any role indirectly without permission check is a good idea >~<
     target = commands.user("user", "the User to be complemented")
     #optional:
-    msg = commands.string("text", '''optional text. shows up as "@user 'text'"''', default=" ")
+    msg = commands.string("text", '''optional text. shows up as "@user 'text'"''', default="")
     @commands.invoke
     async def invoke(self, ctx: commands.Context) -> None:
-        if msg == "":
-            msg = random.choice(compliments)
-        print(f"[DEBUG] msg is: '{msg}'")
-        msg = f"{self.target.mention} {msg}"
-        await event.app.rest.create_message(ctx.channel_id, msg)
+        if self.msg == "":
+            self.msg = random.choice(compliments)
+        print(f"[DEBUG] msg is: '{self.msg}'")
+        self.msg = f"{self.target.mention} {self.msg}"
+        await ctx.client.app.rest.create_message(ctx.channel_id, self.msg)
+        await ctx.respond("complement sent <3", ephemeral=True)
+        
         pass
+
+# i = 0
+# while i < 50:
+#     print(random.choice(compliments))
+#     i += 1
