@@ -21,7 +21,7 @@ async def member_joined(event: hikari.MemberCreateEvent) -> None:
     if hikari.GuildMemberFlags.DID_REJOIN in event.member.flags:
         msg = f"Welcome back {event.member.mention}!"
     print("sending " + msg)
-    await event.app.rest.create_message(guild.system_channel_id, msg)
+    await event.app.rest.create_message(guild.system_channel_id, msg, user_mentions=True)
     pass
 
 @loader.listener(hikari.MemberDeleteEvent)

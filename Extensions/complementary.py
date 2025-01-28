@@ -22,6 +22,7 @@ compliments = [
     "you're nice btw >w<",
     "you're nice ^w^",
     "<- cool person spotted B3",
+    "<- cutie >:3c"
 ]
 
 @loader.command
@@ -41,7 +42,7 @@ class Complement(
             self.msg = random.choice(compliments)
         print(f"[DEBUG] msg is: '{self.msg}'")
         self.msg = f"{self.target.mention} {self.msg}"
-        await ctx.client.app.rest.create_message(ctx.channel_id, self.msg)
+        await ctx.client.app.rest.create_message(ctx.channel_id, self.msg, user_mentions=True)
         await ctx.respond("complement sent <3", ephemeral=True)
         
         pass

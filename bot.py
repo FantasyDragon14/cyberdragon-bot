@@ -24,16 +24,17 @@ load_dotenv()
 
 token = os.getenv("DISCORD_TOKEN")
 
-intents = (
-    hikari.Intents.GUILDS  # limbo
-    | hikari.Intents.GUILD_MEMBERS  # limbo
-    | hikari.Intents.GUILD_MESSAGES  # activity
-    | hikari.Intents.GUILD_MESSAGE_TYPING  # activity
-    | hikari.Intents.GUILD_VOICE_STATES  # activity
-    | hikari.Intents.MESSAGE_CONTENT
-
-    | hikari.Intents.ALL_DMS
-)
+# intents = (
+#     hikari.Intents.GUILDS  # limbo
+#     | hikari.Intents.GUILD_MEMBERS  # limbo
+#     | hikari.Intents.GUILD_MESSAGES  # activity
+#     | hikari.Intents.GUILD_MESSAGE_TYPING  # activity
+#     | hikari.Intents.GUILD_VOICE_STATES  # activity
+#     | hikari.Intents.MESSAGE_CONTENT
+#     | hikari.Intents.
+#     | hikari.Intents.ALL_DMS
+# )
+intents = hikari.Intents.ALL
 
 bot = hikari.GatewayBot(token= token, intents= intents, logs= "INFO") #create bot.  logs= "DEBUG" | "TRACE_HIKARI"
 client = commands.client_from_app(bot) #create lightbulb client from bot to use for lightbulb stuff

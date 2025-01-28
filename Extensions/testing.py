@@ -31,7 +31,7 @@ class test(
     @commands.invoke
     async def invoke(self, ctx: commands.Context) -> None:
         print("test running")
-        response = await ctx.respond("test running...")
+        response = await ctx.respond(f"{ctx.member.mention}test running...", user_mentions=True)
         await asyncio.sleep(10)
         await ctx.edit_response(response, "test complete")
         print("test complete")
