@@ -118,10 +118,10 @@ def check_data_tree() -> None:
         #         download_file(os.path.join(".", folder_data, "default_config_guild.toml"), "https://raw.githubusercontent.com/FantasyDragon14/cyberdragon-bot/refs/heads/discord-python-hikari/Data/default_config_guild.toml")
         # else: print("default_config_guild exists")
 
-        if not os.path.exists(os.path.join(".", folder_data, config_global)):
-                print("Global config missing, downloading...")
-                download_file(os.path.join(".", folder_data, config_global), "https://raw.githubusercontent.com/FantasyDragon14/cyberdragon-bot/refs/heads/discord-python-hikari/Data/default_config_global.toml")
-        else: print("config_global exists")
+        # if not os.path.exists(os.path.join(".", folder_data, config_global)):
+        #         print("Global config missing, downloading...")
+        #         download_file(os.path.join(".", folder_data, config_global), "https://raw.githubusercontent.com/FantasyDragon14/cyberdragon-bot/refs/heads/discord-python-hikari/Data/default_config_global.toml")
+        # else: print("config_global exists")
         
 def member_table(member_id:str) -> str:
         return "id" + str(member_id)
