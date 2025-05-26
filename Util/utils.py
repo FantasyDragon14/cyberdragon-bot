@@ -1,5 +1,6 @@
 import random
 import lightbulb
+import re
 
 dev_ids = [
     432248872845180932, #FantasyDragon14
@@ -15,8 +16,8 @@ def split_message(s:str, maxchars:int=2000, separator="\n") -> list:
     messages = []
     msg = ""
     l = s.rsplit('\n')
-    #print("[printing l]")
-    #print(l)
+    # print("[printing l]")
+    # print(l)
     for p in l: #check for maxchars first? which is better? ...
         if len(p) > maxchars:
             raise Exception()
@@ -30,20 +31,30 @@ def split_message(s:str, maxchars:int=2000, separator="\n") -> list:
     if len(msg) > 0: messages.append(msg)
     return messages
     
+def count_words(s:str) -> int:
+    """attempts to count how many words are in a string,
+    by splitting on whitespace and excluding numbers
+
+    Args:
+        s (str): the input string
+
+    Returns:
+        int: how many words are in the string
+    """
+    i = 0
+    words = s.split()
+    for word in words:
+        if not word.isnumeric():
+            i += 1
+    return i
+
 def test():
-    msg = "this is a very long paragraph, definitely.\nI'll have to set the maxchars very low for this to work\nbut maybe...\nidk what I'm gonna do\n"
+    msg1 = "this is a very long paragraph, definitely.\nI'll have to set the maxchars very low for this to work\nbut maybe...\nidk what I'm gonna do\n"
     msg = "hu\nyeah"
-    for i in range(1):
-        msg += f"{i}. \tusername |" + "Stuff"* random.randrange(2, 10) + "\n"
-    print("testing split_message()")
-    print(msg)
-    newmsgs = split_message(msg, 200)
-    print(newmsgs)
-    print("\n\n\n")
-    for m in newmsgs:
-        print("_____[NEW_MESSAGE]________________")
-        print(m)
-        print("[END]")
+    print("testing word counting:")
+    msg = "one two three. I put 8 words in here\nsecond sentence has 4 words"
+    result = count_words(msg)
+    print("{", msg, "} has ", result, "words")
     
     
 if __name__ == "__main__":

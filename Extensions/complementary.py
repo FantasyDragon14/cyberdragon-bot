@@ -7,6 +7,13 @@ import random
 import hikari
 import lightbulb as commands
 
+try: #adding Extensin-specific activity/status if status extension exists
+    import Extensions.status as Status
+    Status.activities.append(hikari.Activity(name="ready to relay compliments ;3", type=hikari.ActivityType.CUSTOM),)
+except: pass
+
+        
+
 loader = commands.Loader()
 
 compliments = [

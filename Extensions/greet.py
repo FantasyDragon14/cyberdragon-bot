@@ -8,6 +8,10 @@ import lightbulb as commands
 
 loader = commands.Loader()
 
+try: #adding Extensin-specific activity/status if status extension exists
+    import Extensions.status as Status
+    Status.activities.append(hikari.Activity(name="Hi everyone ^w^", type=hikari.ActivityType.CUSTOM),)
+except: pass
 
 @loader.listener(hikari.MemberCreateEvent)
 async def member_joined(event: hikari.MemberCreateEvent) -> None:

@@ -5,6 +5,8 @@ import lightbulb as commands
 import asyncio
 import sqlite3
 
+import Util
+
 #from bot import dev
 
 class CustomLoader(commands.Loader):
@@ -16,9 +18,7 @@ class CustomLoader(commands.Loader):
 
 loader = commands.Loader()
 
-print("-----------------------\n\tTesting...\n-----------------------")
-
-db = sqlite3.connect("./Data/DB/test.db")
+db = sqlite3.connect(os.path.join(".", Util.data.folder_data, Util.data.folder_misc, "test.db"))
 
 @loader.command
 class test(
@@ -48,14 +48,24 @@ class HelloWorld(
         await ctx.respond("Hello World!")
 
 @loader.command
-class Restart_Bot(
+class get_channel_info_CMD(
     commands.SlashCommand,
-    name="restart_completely",
-    description="Restarts the bot completely for testing. needs dev privileges",
+    name="channelsinfo",
+    description="get info on all of a guilds channels",
     hooks=[commands.prefab.owner_only],
 ):
     @commands.invoke
-    async def invoke(self, ctx: commands.Context) -> None:
-        python = sys.executable
-        await ctx.respond("restarting, done if I'm online again")
-        os.execl(python, python, *sys.argv)
+    async def get_info(self, ctx:commands.Context) -> None:
+        await ctx.defer()
+        print("why...")
+        msg = ""
+        guild = ctx.member.get_guild()
+        await asyncio.sleep(1)
+        msg += str(guild) + ": " + str(type(guild)) + ", channels:"
+        channels = guild.get_channels()
+        msg += "\n" + str(channels) + "...\n"
+        for channel in channels:
+            msg += str(channel) + str(type(channel)) + str(channels[channel]) + str(type(channels[channel])) + "\n"
+        print(msg)
+        messages = Util.utils.split_message(msg)
+        await ctx.respond(messages[0])
