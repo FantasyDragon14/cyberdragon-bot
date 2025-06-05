@@ -1,3 +1,5 @@
+"""Module for testing stuff
+"""
 import os
 import sys
 import hikari

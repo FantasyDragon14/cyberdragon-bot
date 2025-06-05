@@ -10,7 +10,7 @@ loader = commands.Loader()
 
 try: #adding Extensin-specific activity/status if status extension exists
     import Extensions.status as Status
-    Status.activities.append(hikari.Activity(name="Hi everyone ^w^", type=hikari.ActivityType.CUSTOM),)
+    Status.activities.append(hikari.Activity(name="for new members", type=hikari.ActivityType.WATCHING),)
 except: pass
 
 @loader.listener(hikari.MemberCreateEvent)

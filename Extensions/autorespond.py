@@ -8,6 +8,13 @@ import random
 
 loader = commands.Loader()
 
+try: #adding Extensin-specific activity/status if status extension exists
+    import Extensions.status as Status
+    Status.activities.append(hikari.Activity(name="Hi everyone ^w^", type=hikari.ActivityType.CUSTOM),)
+    Status.activities.append(hikari.Activity(name="Hello everynyan :3", type=hikari.ActivityType.CUSTOM),)
+    Status.activities.append(hikari.Activity(name="say Hi :D", type=hikari.ActivityType.CUSTOM),)
+except: pass
+
 @loader.listener(hikari.MessageCreateEvent)
 async def on_message(event: hikari.MessageCreateEvent):
 	if not event.is_human: return
@@ -46,7 +53,6 @@ async def hello(event: hikari.MessageCreateEvent):
 	"""
 	msg = random.choice(hello_response)
 	await event.app.rest.create_message(event.channel_id, msg)
-	#TODO
 	pass
 
 
@@ -71,3 +77,5 @@ async def parse_content(message):
 	return None
 
 #I'm probably gonna rewrite the whole thing for better paring and to detect and parse replies, mentions etc better
+
+#TODO: Rewrite this whole fucing module

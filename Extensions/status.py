@@ -1,3 +1,6 @@
+"""Module to set/manage the bots status/activity messages
+other Modules can add to activities list (status.activities.append()) if they have their own activities
+"""
 import traceback
 import hikari
 import lightbulb as commands
@@ -26,7 +29,14 @@ if mode == "guardian":
     activities = [
         hikari.Activity(name="Guarding the Den (Discord Server)", type=hikari.ActivityType.CUSTOM),
         hikari.Activity(name="you yap", type= hikari.ActivityType.WATCHING),
-        hikari.Activity(name="a popular youtube video...", state="your mom x3", url='https://www.youtube.com/watch?v=dQw4w9WgXcQ', type= hikari.ActivityType.WATCHING),
+        hikari.Activity(name="a popular youtube video...", state="https://www.youtube.com/watch?v=dQw4w9WgXcQ", url='https://www.youtube.com/watch?v=dQw4w9WgXcQ', type= hikari.ActivityType.WATCHING),
+        hikari.Activity(name="flying in circles", type=hikari.ActivityType.CUSTOM),
+        hikari.Activity(name="Definitely not sleeping", type=hikari.ActivityType.CUSTOM),
+        hikari.Activity(name="Being Alert", type=hikari.ActivityType.CUSTOM),
+        hikari.Activity(name="I am not distractable by petting :}", type=hikari.ActivityType.CUSTOM),
+        hikari.Activity(name="with subroutines", type=hikari.ActivityType.PLAYING),
+        hikari.Activity(name="Board", type=hikari.ActivityType.CUSTOM),
+        hikari.Activity(name="the dragon 🐉", type=hikari.ActivityType.CUSTOM),
     ]
     status = [
         hikari.presences.Status.ONLINE,
