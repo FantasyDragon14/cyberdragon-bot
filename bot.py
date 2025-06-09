@@ -74,7 +74,7 @@ async def on_started(_: hikari.StartedEvent) -> None:
         print("### ", item)
     
     print("setting bot status")
-    await bot.update_presence(activity= hikari.Activity(name="Testing", state="test", type= hikari.ActivityType.CUSTOM), status= hikari.presences.Status.DO_NOT_DISTURB)
+    await bot.update_presence(activity= hikari.Activity(name="Waking up", state="i just woke up", type= hikari.ActivityType.CUSTOM), status= hikari.presences.Status.IDLE)
     await client.sync_application_commands()
     print("started completely")
     

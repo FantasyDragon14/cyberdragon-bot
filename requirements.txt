@@ -1,6 +1,7 @@
 hikari
-git+https://github.com/tandemdude/hikari-lightbulb
+hikari-lightbulb
 hikari-miru
 python-dotenv
 tomlkit
 requests
+pandas
