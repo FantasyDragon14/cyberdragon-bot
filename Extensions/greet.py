@@ -4,9 +4,11 @@ if setting is true, also sends a custom message on member leaving
 """
 import hikari
 import lightbulb as commands
+import logging
 
 
 loader = commands.Loader()
+logger = logging.getLogger("greet")
 
 try: #adding Extensin-specific activity/status if status extension exists
     import Extensions.status as Status
@@ -18,13 +20,13 @@ async def member_joined(event: hikari.MemberCreateEvent) -> None:
     guild:hikari.GatewayGuild = event.get_guild()
     guild_name = guild.name
     
-    print(f"{event.member.mention} joined {guild_name}, sending message...")
+    logger.info(f"{event.member.mention} joined {guild_name}, sending message")
 
     #TODO make this message customizable in settings, maybe even per server
     msg = f"{event.member.mention} welcome to {guild_name} ^w^"
     if hikari.GuildMemberFlags.DID_REJOIN in event.member.flags:
         msg = f"Welcome back {event.member.mention}!"
-    print("sending " + msg)
+    logger.debug("sending " + msg)
     await event.app.rest.create_message(guild.system_channel_id, msg, user_mentions=True)
     pass
 

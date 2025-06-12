@@ -5,8 +5,10 @@ import hikari
 import lightbulb as commands
 import re
 import random
+import logging
 
 loader = commands.Loader()
+logger = logging.getLogger("autorespond")
 
 try: #adding Extensin-specific activity/status if status extension exists
     import Extensions.status as Status
@@ -67,8 +69,8 @@ async def parse_content(message):
 	Returns:
 		function: the function to handle this message
 	"""
-	print("Parsing message:")
-	print(message)
+	logger.info("Parsing message:")
+	logger.info(str(message))
 	if message is None: return
 	#TODO do this properly with the right regex and shit
 	if re.search(r"(^|\s+)h(i+|(a|e)llo)\W*([\s]|$)", message, re.I):

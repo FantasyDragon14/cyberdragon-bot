@@ -5,8 +5,10 @@ import traceback
 import hikari
 import lightbulb as commands
 import random, os, sys
+import logging
 
 loader = commands.Loader()
+logger = logging.getLogger("status")
 
 activities = [
     hikari.Activity(name="the code for changes", type= hikari.ActivityType.WATCHING),
@@ -45,13 +47,13 @@ if mode == "guardian":
 
 @loader.task(commands.uniformtrigger(minutes=statusswitchminutes), max_failures=-1, auto_start=True)
 async def bot_status(bot:hikari.GatewayBot):
-    if mode == "testing": print("Trying to change status")
+    logger.debug("Trying to change status")
     act = random.choice(activities)
     stat = random.choice(status)
     try:
         await bot.update_presence(activity=act, status= stat)
-        if mode == "testing": print("changed status")
+        logger.debug("changed status")
     except:
         if mode == "testing":
             traceback.print_exception()
-            print("trying again later")
+            logger.debug("trying again later")

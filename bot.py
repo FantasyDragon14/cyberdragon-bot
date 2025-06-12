@@ -13,6 +13,7 @@ import sys
 from Util import data
 from Util import utils
 import Extensions
+import logging
 
 # Unix optimizations
 # https://github.com/hikari-py/hikari#uvloop
@@ -24,8 +25,10 @@ if os.name != "nt":
 load_dotenv()
 
 #change between Development and deployment version
+
 mode = "testing"
 loglevel = "DEBUG"
+logger = None
 try:
     mode = sys.argv[1]
 except:
@@ -58,25 +61,27 @@ bot.subscribe(hikari.StartingEvent, client.start)
 
 @bot.listen(hikari.StartingEvent) #execute before the bot connects to discord
 async def on_starting(_: hikari.StartingEvent) -> None:
+    logger = logging.getLogger("main")
     # Load any extensions
     await client.load_extensions_from_package(Extensions)
-    print("loaded Extensions, starting client:")
+    logger.info("loaded Extensions, starting client:")
     # Start the bot - make sure commands are synced properly
     await client.start()
-    print("started client")
+    logger.info("started client")
 
 @bot.listen(hikari.StartedEvent) #execute after the bot has started
 async def on_started(_: hikari.StartedEvent) -> None:
+    logger = logging.getLogger("main")
     guilds = bot.rest.fetch_my_guilds()
     await data.check_guild_data(guilds)
-    print("### current guilds:")
+    logger.info("### current guilds:")
     async for item in bot.rest.fetch_my_guilds():
-        print("### ", item)
+        logger.info("### " + str(item))
     
-    print("setting bot status")
+    logger.info("setting bot status")
     await bot.update_presence(activity= hikari.Activity(name="Waking up", state="i just woke up", type= hikari.ActivityType.CUSTOM), status= hikari.presences.Status.IDLE)
     await client.sync_application_commands()
-    print("started completely")
+    logger.info("started completely")
     
 @bot.listen(hikari.GuildJoinEvent)
 async def on_new_join(event: hikari.GuildJoinEvent) -> None:

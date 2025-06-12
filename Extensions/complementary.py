@@ -6,6 +6,7 @@ commands to complement people via the bot (or shame...?)
 import random
 import hikari
 import lightbulb as commands
+import logging
 
 try: #adding Extensin-specific activity/status if status extension exists
     import Extensions.status as Status
@@ -15,6 +16,7 @@ except: pass
         
 
 loader = commands.Loader()
+logger = logging.getLogger("complementary")
 
 compliments = [
     "you're cool ^^",
@@ -47,7 +49,7 @@ class Complement(
     async def invoke(self, ctx: commands.Context) -> None:
         if self.msg == "":
             self.msg = random.choice(compliments)
-        print(f"[DEBUG] msg is: '{self.msg}'")
+        logger.debug(f"msg is: '{self.msg}'")
         self.msg = f"{self.target.mention} {self.msg}"
         await ctx.client.app.rest.create_message(ctx.channel_id, self.msg, user_mentions=True)
         await ctx.respond("complement sent <3", ephemeral=True)

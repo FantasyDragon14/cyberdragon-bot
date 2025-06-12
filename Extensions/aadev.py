@@ -5,8 +5,11 @@ import sys
 import hikari
 import lightbulb as commands
 import asyncio
+import logging
 
 loader = commands.Loader()
+
+logger = logging.getLogger("dev")
 
 @loader.command
 class Restart_Bot(
@@ -41,17 +44,17 @@ class reload_ext(
         for f in os.listdir(mypath):
             if os.path.isfile(os.path.join(mypath, f)) and not f.startswith("_"):
                 extensions.append(f)
-        print("reloading extensions:")
+        logger.info("reloading extensions:")
         #extensions = [os.path.join(mypath, name) for name in extensions]
         extensions = [mypath+"."+name[:-3] for name in extensions]
-        print(extensions)
+        logger.info(extensions)
         try:
             await client.reload_extensions(*extensions)
             await ctx.respond("reloaded extensions, syncing commands")
         except: await ctx.respond("reload had some errors. syncing commands")
         
         await client.sync_application_commands()
-        print("complete")
+        logger.info("reload complete")
         
 
 #register a reload settings files command

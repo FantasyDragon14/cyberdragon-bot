@@ -6,19 +6,21 @@ import hikari
 import lightbulb as commands
 import asyncio
 import sqlite3
+import logging
 
 import Util
 
 #from bot import dev
 
 class CustomLoader(commands.Loader):
-    pass
     async def remove_from_client(self, client: commands.Client) -> None:
         #unload / close db connections here?
+        logger.info('Removing Testing Extension')
         return await super().remove_from_client(client)
 
 
-loader = commands.Loader()
+loader = CustomLoader()
+logger = logging.getLogger("testing")
 
 db = sqlite3.connect(os.path.join(".", Util.data.folder_data, Util.data.folder_misc, "test.db"))
 
@@ -32,11 +34,12 @@ class test(
 ):
     @commands.invoke
     async def invoke(self, ctx: commands.Context) -> None:
-        print("test running")
+        logger.info('test command was invoked')
+        logger.debug("test running")
         response = await ctx.respond(f"{ctx.member.mention}test running...", user_mentions=True)
         await asyncio.sleep(10)
         await ctx.edit_response(response, "test complete")
-        print("test complete")
+        logger.debug("test complete")
 
 
 @loader.command
@@ -59,7 +62,7 @@ class get_channel_info_CMD(
     @commands.invoke
     async def get_info(self, ctx:commands.Context) -> None:
         await ctx.defer()
-        print("why...")
+        logger.debug("Channelinfo:")
         msg = ""
         guild = ctx.member.get_guild()
         await asyncio.sleep(1)
@@ -68,6 +71,6 @@ class get_channel_info_CMD(
         msg += "\n" + str(channels) + "...\n"
         for channel in channels:
             msg += str(channel) + str(type(channel)) + str(channels[channel]) + str(type(channels[channel])) + "\n"
-        print(msg)
+        logger.debug(msg)
         messages = Util.utils.split_message(msg)
         await ctx.respond(messages[0])

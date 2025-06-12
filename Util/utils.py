@@ -1,6 +1,9 @@
 import random
 import lightbulb
 import re
+import logging
+
+logger = logging.getLogger('util')
 
 dev_ids = [
     432248872845180932, #FantasyDragon14
@@ -12,17 +15,14 @@ dev_ids = [
         
 def split_message(s:str, maxchars:int=2000, separator="\n") -> list:
     maxchars = maxchars - int(maxchars*0.05)
-    print("[MAXCHARS]: " + str(maxchars))
+    logger.debug("[MAXCHARS]: " + str(maxchars))
     messages = []
     msg = ""
     l = s.rsplit('\n')
-    # print("[printing l]")
-    # print(l)
     for p in l: #check for maxchars first? which is better? ...
         if len(p) > maxchars:
             raise Exception()
     for i, p in enumerate(l):
-    #    print(f"[DEBUG] checking msglen: {len(msg)} plen: {len(p)} (sum: {len(msg) + len(p)}|: {p}")
         if len(msg) + len(p) < maxchars:
             msg += p + "\n"
         else:
