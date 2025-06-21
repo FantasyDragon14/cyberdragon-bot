@@ -22,25 +22,7 @@ if os.name != "nt":
 
     uvloop.install()
 
-load_dotenv()
-
-#change between Development and deployment version
-
-mode = "testing"
-loglevel = "DEBUG"
-logger = None
-try:
-    mode = sys.argv[1]
-except:
-    pass
-mode = mode.lower()
-if mode == "guardian":
-    token = os.getenv("DISCORD_TOKEN")
-    loglevel = "INFO"
-if mode == "testing":
-    print('testing mode')
-    token = os.getenv("DISCORD_TESTING")
-
+logger = logging.getLogger("main")
 
 # intents = (
     #     hikari.Intents.GUILDS  # limbo
@@ -53,15 +35,14 @@ if mode == "testing":
     #     | hikari.Intents.ALL_DMS
     # )
 intents = hikari.Intents.ALL
-bot = hikari.GatewayBot(token= token, intents= intents, logs= loglevel) #create bot.  logs= "DEBUG" | "TRACE_HIKARI"
+bot = hikari.GatewayBot(token= data.token, intents= intents, logs= data.loglevel) #create bot.  logs= "DEBUG" | "TRACE_HIKARI"
 client = commands.client_from_app(bot) #create lightbulb client from bot to use for lightbulb stuff
-bot.subscribe(hikari.StartingEvent, client.start)
 
+data.bot = bot
 #miru.install(bot) #if i should use miru
 
 @bot.listen(hikari.StartingEvent) #execute before the bot connects to discord
 async def on_starting(_: hikari.StartingEvent) -> None:
-    logger = logging.getLogger("main")
     # Load any extensions
     await client.load_extensions_from_package(Extensions)
     logger.info("loaded Extensions, starting client:")
@@ -85,7 +66,7 @@ async def on_started(_: hikari.StartedEvent) -> None:
     
 @bot.listen(hikari.GuildJoinEvent)
 async def on_new_join(event: hikari.GuildJoinEvent) -> None:
-    data.check_guild_data([event.guild_id])
+    data.check_guild_data([event.get_guild|event.guild_id])
 
         
 bot.run() #run the bot

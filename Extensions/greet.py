@@ -6,8 +6,18 @@ import hikari
 import lightbulb as commands
 import logging
 
-
-loader = commands.Loader()
+class Loader(commands.Loader):
+    async def remove_from_client(self, client: commands.Client) -> None:
+        #unload / close db connections here?
+        logger.info('Removing greet Extension')
+        return await super().remove_from_client(client)
+    
+    async def add_to_client(self, client:commands.Client) -> None:
+        logger.info('adding greet extension')
+        # await register_commands()
+        await super().add_to_client(client)
+        
+loader = Loader()
 logger = logging.getLogger("greet")
 
 try: #adding Extensin-specific activity/status if status extension exists
@@ -32,12 +42,10 @@ async def member_joined(event: hikari.MemberCreateEvent) -> None:
 
 @loader.listener(hikari.MemberDeleteEvent)
 async def member_left(event: hikari.MemberDeleteEvent)  -> None:
-    guild:hikari.GatewayGuild = event.get_guild()
-    #TODO implement check if setting is enabled
-    #if (settings.setting_enabled(guild, "message_on_member_leave")):
+    guild:hikari.GatewayGuild = await event.get_guild()
+    logger.info(f"{event.old_member.display_name} left {guild.name}")
     
     #TODO make this message customizable in settings, maybe even per server
-    msg = f"{event.member_old.mention} just left the Server..."
-    print(msg)
+    msg = f"{event.old_member.mention} just left the Server..."
     await event.app.rest.create_message(guild.system_channel_id, msg)
     pass

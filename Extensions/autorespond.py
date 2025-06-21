@@ -7,7 +7,18 @@ import re
 import random
 import logging
 
-loader = commands.Loader()
+class Loader(commands.Loader):
+    async def remove_from_client(self, client: commands.Client) -> None:
+        #unload / close db connections here?
+        logger.info('Removing autorespond Extension')
+        return await super().remove_from_client(client)
+    
+    async def add_to_client(self, client:commands.Client) -> None:
+        logger.info('adding autorespond extension')
+        # await register_commands()
+        await super().add_to_client(client)
+        
+loader = Loader()
 logger = logging.getLogger("autorespond")
 
 try: #adding Extensin-specific activity/status if status extension exists
@@ -18,11 +29,14 @@ try: #adding Extensin-specific activity/status if status extension exists
 except: pass
 
 @loader.listener(hikari.MessageCreateEvent)
-async def on_message(event: hikari.MessageCreateEvent):
+async def on_message(event: hikari.MessageCreateEvent, bot: hikari.GatewayBot):
 	if not event.is_human: return
 	
 	action = await parse_content(event.message.content)
+	me = bot.get_me()
 
+	if me.id in event.message.user_mentions_ids:
+		await event.message.add_reaction('👀')
 	if action != None:
 		await action(event)
 
@@ -54,7 +68,7 @@ async def hello(event: hikari.MessageCreateEvent):
 		channel_id: the channel id to send the message to
 	"""
 	msg = random.choice(hello_response)
-	await event.app.rest.create_message(event.channel_id, msg)
+	await event.message.respond(msg, reply=event.message)
 	pass
 
 
@@ -80,4 +94,4 @@ async def parse_content(message):
 
 #I'm probably gonna rewrite the whole thing for better paring and to detect and parse replies, mentions etc better
 
-#TODO: Rewrite this whole fucing module
+#TODO: Rewrite this whole fucing module sometime to actually be usable instead of a gimmick

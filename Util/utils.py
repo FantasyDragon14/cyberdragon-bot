@@ -1,7 +1,9 @@
 import random
-import lightbulb
+import hikari
+import lightbulb as commands
 import re
 import logging
+import tomlkit
 
 logger = logging.getLogger('util')
 
@@ -47,6 +49,30 @@ def count_words(s:str) -> int:
         if not word.isnumeric():
             i += 1
     return i
+
+def recursive_setdefault_doc(item:tomlkit.items.Any|dict, default:tomlkit.items.Any|dict):
+    
+    if hasattr(default, 'keys'):
+        for key in default.keys():
+            try:
+                recursive_setdefault_doc(item[key], default[key])
+            except:
+                try:
+                    item[key]
+                except: item[key] = default[key]
+    else:
+        pass
+
+def pretty_dict_tostring(d, level=0) -> str:
+    s=''
+    if hasattr(d, 'keys'):
+        for key in d.keys():
+            if hasattr(d[key], 'keys'):
+                s += '\t'*level + str(key) + '\n'
+                s += '\t'*level + pretty_dict_tostring(d[key], level+1) + '\n'
+            else: s += '\t'*level + str(key) + ': ' + str(d[key]) + '\n'
+    return s
+
 
 def test():
     msg1 = "this is a very long paragraph, definitely.\nI'll have to set the maxchars very low for this to work\nbut maybe...\nidk what I'm gonna do\n"

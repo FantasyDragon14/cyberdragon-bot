@@ -3,6 +3,7 @@ provides utilities for default data. extensions may add to
 checks/creates Data structure on execution/import
 """
 
+from dotenv import load_dotenv
 import os, sys
 import tomlkit, tomllib
 from pathlib import Path
@@ -12,6 +13,28 @@ import shutil
 import hikari
 import lightbulb as commands
 import logging
+from Util import utils
+
+import tomlkit.exceptions
+
+load_dotenv()
+
+#change between Development and deployment version
+
+mode = "testing"
+loglevel = "DEBUG"
+logger = None
+try:
+    mode = sys.argv[1]
+except:
+    pass
+mode = mode.lower()
+if mode == "guardian":
+    token = os.getenv("DISCORD_TOKEN")
+    loglevel = "INFO"
+if mode == "testing":
+    print('testing mode')
+    token = os.getenv("DISCORD_TESTING")
 
 logger = logging.getLogger("data")
 folder_data = "Data"
@@ -19,6 +42,14 @@ folder_guilds = "Guilds"
 folder_misc = "Misc"
 config_global = "config_global.toml"
 config = "config.toml"
+
+_default_guild_config_tomlkit_doc = tomlkit.document()
+_default_guild_config_tomlkit_doc.add('general', {
+        'GuildName': 'tmp',
+        'GuildID': '...',
+        })
+
+bot:hikari.GatewayBot = None
 
 mode = "testing"
 try:
@@ -70,9 +101,10 @@ async def check_guild_data(guilds:iter):
 
         Args:
             guilds (iter): iterable of variable types: guild_id strings or Guild objects
-        """        
+        """
         async for id in guilds:
-                name = "..."
+                logger.debug(f'Checking guild data for {id}')
+                name = "NaN"
                 if type(id) != str:
                         try:
                                 name = id.name
@@ -81,19 +113,24 @@ async def check_guild_data(guilds:iter):
                                 id = str(id)
                 guild_folder_path = os.path.join(".", folder_data, folder_guilds, str(id))
                 Path(guild_folder_path).mkdir(parents=True, exist_ok=True)
-                if not os.path.exists(os.path.join(guild_folder_path, config)):
-                        logger.warn(f"config of guild {id} missing, restoring with default")
-                        with open(os.path.join(guild_folder_path, config), 'a'):
-                                pass
-                else: logger.info(f"{id} config exists")
                 
-                with open(os.path.join(guild_folder_path, name), 'w') as f:
+                #this whole thing will be replaced by assert_guild_config
+                assert_guild_config(id)
+                config_guild_set(str(id), ('general', 'GuildName',), str(name))
+                config_guild_set(str(id), ('general', 'GuildID',), str(id))
+                
+                with open(os.path.join(guild_folder_path, str(name)), 'w') as f:
                         f.write("name: " + name)
                         f.write("\n")
                         f.write("id: " + str(id))
 
+def get_saved_guilds() -> dict:
+        guilds = {}
+        guilds = os.path.join(".", folder_data, folder_guilds)
+        return {int(guild_id): 'name here' for guild_id in os.listdir(guilds)}
+
 def get_guild_db(guild_id:str, db_name:str) -> (sqlite3.Connection):
-        """returns the connection to the databank with db_name from the guild folder of the corresponding guild id
+        """returns the connection to the databank with db_name from the guild folder of the corresponding GuildId
 
         Args:
             guild_id (*Snowflake): the id of the guild
@@ -156,29 +193,15 @@ def table_exists(cur:sqlite3.Cursor, table_name:str) -> bool:
         logger.debug(f"checking if table {table_name} exists: {result[0] == (1,)}")
         return  result[0] == (1,)
 
-async def get_guilds(bot: hikari.GatewayBot) -> hikari.LazyIterator:
-        results = await bot.rest.fetch_my_guilds()
+async def get_guilds(bot: hikari.GatewayBot):
+        "trying to get this to return a list of all guild items the bot is part of, but it doesn't seem to work"
+        results =  [item async for item in bot.rest.fetch_my_guilds()]
+        print(type(results))
+        print(type(results[0]))
         return results
-
-def settings_get(setting:str):
-        #TODO set this up properly so it reads the settings file
-        pass
-
-def guildsettings_get(guild_id:str, setting:str):
-        #TODO set this up properly so it reads the guilds settings file
-        if 'activity' in setting:
-                if "weight" in setting:
-                        if "typing" in setting: return 0
-                        if "reaction" in setting: return 1
-                        if "lurking" in setting: return 1
-                        if "voice" in setting: return 10
-                        if "message" in setting: return 5
-                if 'data_retention' in setting:
-                        if 'total' in setting: return 30
-                        if 'typing' in setting: return 5
-                if 'live_update' in setting:
-                        return True
-        return None
+        async for guild in bot.rest.fetch_my_guilds():
+                results.append(item)
+        return results
 
 def config_global_get(settingtree:tuple[str]):
         setting = None
@@ -186,7 +209,7 @@ def config_global_get(settingtree:tuple[str]):
                 with open(os.path.join(folder_data, folder_misc, config_global), 'rb') as f:
                         toml = tomllib.load(f)
         except (FileNotFoundError):
-                logger.warn(f'global config: file missing! Rebuild the config to avoid errors')
+                logger.warning(f'global config: file missing! Rebuild the config to avoid errors')
                 return None
         subsetting = None
         try:
@@ -194,59 +217,88 @@ def config_global_get(settingtree:tuple[str]):
                         subsetting = branch
                         setting = setting[branch]
         except (KeyError):
-                logger.warn(f"global config: failed to find subsetting [{subsetting}] in setting [{setting}]")
+                logger.warning(f"global config: failed to find subsetting [{subsetting}] in setting [{setting}]")
                 return None
         return setting
-        
-def config_guild_get(guild_id:str, category:str, settingtree:tuple[str]) -> str|None:
-        """reads a guilds settings file and returns the value at [category][treesetting1][setting2]...
+
+def config_guild_get(guild_id:str, settingtree:tuple[str]) -> dict|list|str|None:
+        """reads a guilds settings file and returns the value at path [settingtree[0]][settingtree[1]]...
         """
-        setting = None
+        if len(settingtree) < 1:
+                logger.debug(f'config {guild_id}: getting all')
+
+        if len(settingtree) < 2:
+                logger.debug(f'config {guild_id}: getting {settingtree[0]}')
+        logger.debug(f'config {guild_id}: getting {settingtree[0]} - {str(settingtree[1:])}')
         try:
                 with open(os.path.join(folder_data, folder_guilds, str(guild_id), config), 'rb') as f:
                         toml = tomllib.load(f)
         except (FileNotFoundError):
-                logger.warn(f'config [{guild_id}]: config file missing! Rebuild the config to avoid errors')
+                logger.warning(f'config [{guild_id}]: config file missing! Rebuild the config to avoid errors')
                 return None
+        if len(settingtree) < 1:
+                return toml
         try:
-                setting = toml[category]
+                setting = toml[settingtree[0]]
         except (KeyError):
-                logger.warn(f"config [{guild_id}]: failed to find category [{category}]")
+                logger.warning(f"config [{guild_id}]: failed to find category [{settingtree[0]}]")
                 return None
         subsetting_name = None
         setting_name = None
+        if len(settingtree) < 2:
+                return setting
         try:
-                for branch in settingtree:
+                for branch in settingtree[1:]:
                         subsetting_name = branch
                         setting = setting[branch]
                         setting_name = branch
         except (KeyError):
-                logger.warn(f"config [{guild_id}]: failed to find subsetting [{subsetting_name}] in setting [{setting_name}]")
+                logger.warning(f"config [{guild_id}]: failed to find subsetting [{subsetting_name}] in setting [{setting_name}]")
                 return None
+        logger.debug(f'config {guild_id}: got {setting}')
         return setting
 
-def config_guild_set(guild_id:str, category:str, settingtree:tuple[str], value:str) -> str|None:
+def config_guild_get_extensions(guild_id) -> dict|None:
+        """get the status of all toggleable extensions"""
+        toml = None
+        try:
+                with open(os.path.join(folder_data, folder_guilds, str(guild_id), config), 'rb') as f:
+                        toml = tomllib.load(f)
+        except (FileNotFoundError):
+                logger.warning(f'config [{guild_id}]: config file missing! Rebuild the config to avoid errors')
+                return toml
+        ret = {}
+        for extension in toml.keys():
+                if extension == 'general':
+                        ret[extension] = True
+                else:
+                        ret[extension] = toml[extension]['enabled']
+        return ret
+        
+
+def config_guild_set(guild_id:str, settingtree:tuple[str], value:str) -> str|None:
         """sets a value (string), returns old value.
         Creates a setting (with settingtree if it doesn't exist yet)
         
         Use for changing one string, not adding sections to the config
         """
-        logger.debug('\n----- setting setting ------------')
+        logger.debug(f'\n-- setting guild {guild_id} config category [{settingtree[0]}], ({str(settingtree[1:])}) to {value}')
         toml = tomlkit.document()
+        guild_folder_path = os.path.join(".", folder_data, folder_guilds, guild_id)
         try:
-                with open(file, 'rb') as f:
+                with open(os.path.join(guild_folder_path, config), 'r', encoding='utf_8') as f:
                         toml = tomlkit.load(f)
         except (FileNotFoundError):
-                logger.warn(f'config [{guild_id}]: config file missing! Rebuild the config to avoid errors')
+                logger.warning(f'config [{guild_id}]: config file missing! Rebuild the config to avoid errors')
                 return None
         #Do stuff
         try:
-                setting = toml[category]
-        except (tomlKit.KeyError):
-                logger.warn(f"config [{guild_id}]: failed to find category [{category}]")
+                setting = toml[settingtree[0]]
+        except (tomlkit.KeyError):
+                logger.warning(f"config [{guild_id}]: failed to find category [{settingtree[0]}]")
                 return None
         b = None
-        for branch in settingtree[:-1]:
+        for branch in settingtree[1:-1]:
                 try:
                         setting = setting[branch]
                 except:
@@ -259,11 +311,47 @@ def config_guild_set(guild_id:str, category:str, settingtree:tuple[str], value:s
                 old = setting[settingtree[-1]]
                 setting[settingtree[-1]] = value
         
-        with open(file, 'w') as f:
+        with open(os.path.join(guild_folder_path, config), 'w', encoding='utf_8') as f:
                 tomlkit.dump(toml, f)
         logger.debug('------ setting set ----------------')
         return old
 
+def default_config_guild_set(category:str, item:tomlkit.items.Any):
+        try:
+                _default_guild_config_tomlkit_doc.append(category, item)
+        except(tomlkit.exceptions.KeyAlreadyPresent):
+                _default_guild_config_tomlkit_doc[category] = item
+
+def assert_guild_config(guild_id:str, force_reset:bool=False):
+        """Takes a guilds config and compares it to the default config template [_default_guild_config_tomlkit_doc], to see if every value that should be there is there
+        """
+        logger.debug(f'asserting guild config {guild_id}')
+        guild_folder_path = os.path.join(".", folder_data, folder_guilds, str(guild_id))
+        if force_reset:
+                logger.warning(f"config of guild {guild_id} forcefully reset to default")
+                with open(os.path.join(guild_folder_path, config), 'w', encoding='utf_8') as f:
+                                tomlkit.dump(_default_guild_config_tomlkit_doc, f)
+                return
+                
+        toml = tomlkit.document()
+        try:
+                with open(os.path.join(guild_folder_path, config), mode='r', encoding='utf_8') as f:
+                        toml = tomlkit.load(f)
+        except(FileNotFoundError):
+                logger.warning(f"config of guild {guild_id} missing, restoring with default")
+                with open(os.path.join(guild_folder_path, config), 'w', encoding='utf_8') as f:
+                                tomlkit.dump(_default_guild_config_tomlkit_doc, f)
+        except:
+                logger.error(f'config of guild {guild_id} is broken and could not be parsed')
+                return
+        
+         #now to the fun part: comparing the TOML to the default_config to see what's missing
+        utils.recursive_setdefault_doc(toml, _default_guild_config_tomlkit_doc)
+        
+        with open(os.path.join(guild_folder_path, config), 'w',encoding='utf_8') as f:
+                tomlkit.dump(toml, f)
+        logger.debug('asserted')
+        
 """
 Plan: 
 have a default config built by the extensions, then separate method to check/build config for every guild

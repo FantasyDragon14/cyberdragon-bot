@@ -7,14 +7,25 @@ import lightbulb as commands
 import random, os, sys
 import logging
 
-loader = commands.Loader()
+class Loader(commands.Loader):
+    async def remove_from_client(self, client: commands.Client) -> None:
+        #unload / close db connections here?
+        logger.info('Removing status Extension')
+        return await super().remove_from_client(client)
+    
+    async def add_to_client(self, client:commands.Client) -> None:
+        logger.info('adding status extension')
+        # await register_commands()
+        await super().add_to_client(client)
+        
+loader = Loader()
 logger = logging.getLogger("status")
 
 activities = [
     hikari.Activity(name="the code for changes", type= hikari.ActivityType.WATCHING),
     hikari.Activity(name="Testing", state="test", type= hikari.ActivityType.CUSTOM),
-    hikari.Activity(name="I'm still under development uwu", state="your mom x3", type= hikari.ActivityType.CUSTOM),
-    hikari.Activity(name="a popular youtube video...", state="your mom x3", url='https://www.youtube.com/watch?v=dQw4w9WgXcQ', type= hikari.ActivityType.STREAMING),
+    hikari.Activity(name="I'm still under development uwu", state=">w<", type= hikari.ActivityType.CUSTOM),
+    hikari.Activity(name="a popular youtube video...", state="such waow", url='https://www.youtube.com/watch?v=dQw4w9WgXcQ', type= hikari.ActivityType.STREAMING),
 ]
 status = [
     hikari.presences.Status.DO_NOT_DISTURB
@@ -31,7 +42,7 @@ if mode == "guardian":
     activities = [
         hikari.Activity(name="Guarding the Den (Discord Server)", type=hikari.ActivityType.CUSTOM),
         hikari.Activity(name="you yap", type= hikari.ActivityType.WATCHING),
-        hikari.Activity(name="a popular youtube video...", state="gottem", url='https://www.youtube.com/watch?v=dQw4w9WgXcQ', type= hikari.ActivityType.STREAMING),
+        hikari.Activity(name="a popular youtube video...", state="you definitely haven't seen this one before!", url='https://www.youtube.com/watch?v=dQw4w9WgXcQ', type= hikari.ActivityType.STREAMING),
         hikari.Activity(name="flying in circles", type=hikari.ActivityType.CUSTOM),
         hikari.Activity(name="Definitely not sleeping", type=hikari.ActivityType.CUSTOM),
         hikari.Activity(name="Being Alert", type=hikari.ActivityType.CUSTOM),
@@ -54,6 +65,4 @@ async def bot_status(bot:hikari.GatewayBot):
         await bot.update_presence(activity=act, status= stat)
         logger.debug("changed status")
     except:
-        if mode == "testing":
-            traceback.print_exception()
-            logger.debug("trying again later")
+        logger.debug("change failed. trying again next time")

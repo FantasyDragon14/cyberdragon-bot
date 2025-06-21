@@ -1,7 +1,6 @@
 """
 commands to complement people via the bot (or shame...?)
 """
-#TODO
 
 import random
 import hikari
@@ -14,8 +13,18 @@ try: #adding Extensin-specific activity/status if status extension exists
 except: pass
 
         
-
-loader = commands.Loader()
+class Loader(commands.Loader):
+    async def remove_from_client(self, client: commands.Client) -> None:
+        #unload / close db connections here?
+        logger.info('Removing complementary Extension')
+        return await super().remove_from_client(client)
+    
+    async def add_to_client(self, client:commands.Client) -> None:
+        logger.info('adding complementary extension')
+        # await register_commands()
+        await super().add_to_client(client)
+        
+loader = Loader()
 logger = logging.getLogger("complementary")
 
 compliments = [
