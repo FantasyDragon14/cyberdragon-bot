@@ -40,11 +40,11 @@ class Loader(commands.Loader):
         try:
             guilds_update_activity.start()
         except: logger.debug("didn't start activity updater")
-        
+
 loader = Loader()
 logger = logging.getLogger("activityroles")
 
-db_name = "activity"
+db_name = "activity_old"
 category = "activityroles"
 update_frequency = pandas.Timedelta(hours=1)
 if mode == 'testing':
