@@ -6,6 +6,8 @@ import random
 import hikari
 import lightbulb as commands
 import logging
+import tomlkit
+from Util import data as Data
 
 try: #adding Extensin-specific activity/status if status extension exists
     import Extensions.status as Status
@@ -26,6 +28,19 @@ class Loader(commands.Loader):
         
 loader = Loader()
 logger = logging.getLogger("complementary")
+
+category = 'complementary'
+db_name = 'complements'
+
+guild_conf = {
+    'enabled': False,
+    'channel_blacklist': [],
+    'is_whitelist': False,
+}
+guild_doc = tomlkit.item(guild_conf)
+guild_doc['channel_blacklist'].comment("a list of channel ids. can be converted to a whitelist if is_whitelist is true")
+
+Data.default_config_guild_set(category, guild_doc)
 
 compliments = [
     "you're cool ^^",
@@ -56,6 +71,16 @@ class Complement(
     msg = commands.string("text", '''optional text. shows up as "@user 'text'"''', default="")
     @commands.invoke
     async def invoke(self, ctx: commands.Context) -> None:
+        is_whitelist = Data.config_guild_get(str(ctx.guild_id), (category, 'is_whitelist'))
+        
+        if ctx.channel_id in Data.config_guild_get(str(ctx.guild_id), (category, 'channel_blacklist')):
+            if not is_whitelist:
+                await ctx.respond("sending complements isn't allowed in this channel ;w;", ephemeral=True)
+                return
+        elif is_whitelist:
+                await ctx.respond("sending complements isn't allowed in this channel ;w;", ephemeral=True)
+                return
+        
         if self.msg == "":
             self.msg = random.choice(compliments)
         logger.debug(f"msg is: '{self.msg}'")

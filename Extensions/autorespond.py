@@ -6,6 +6,8 @@ import lightbulb as commands
 import re
 import random
 import logging
+import tomlkit
+from Util import data as Data
 
 class Loader(commands.Loader):
     async def remove_from_client(self, client: commands.Client) -> None:
@@ -21,6 +23,20 @@ class Loader(commands.Loader):
 loader = Loader()
 logger = logging.getLogger("autorespond")
 
+category = 'autorespond'
+db_name = 'autorespond'
+
+guild_conf = {
+    'enabled': False,
+    'channel_blacklist': [],
+    'is_whitelist': False,
+}
+
+guild_doc = tomlkit.item(guild_conf)
+guild_doc['channel_blacklist'].comment("a list of channel ids. can be converted to a whitelist if is_whitelist is true")
+
+Data.default_config_guild_set(category, guild_doc)
+
 try: #adding Extensin-specific activity/status if status extension exists
     import Extensions.status as Status
     Status.activities.append(hikari.Activity(name="Hi everyone ^w^", type=hikari.ActivityType.CUSTOM),)
@@ -31,6 +47,16 @@ except: pass
 @loader.listener(hikari.MessageCreateEvent)
 async def on_message(event: hikari.MessageCreateEvent, bot: hikari.GatewayBot):
 	if not event.is_human: return
+ 
+	if not Data.config_guild_get(str(event.guild_id), (category, 'enabled')): return
+ 
+	is_whitelist = Data.config_guild_get(str(event.guild_id), (category, 'is_whitelist'))
+	
+	if event.channel_id in Data.config_guild_get(str(event.guild_id), (category, 'channel_blacklist')):
+		if not is_whitelist:
+			return
+	elif is_whitelist:
+			return
 	
 	action = await parse_content(event.message.content)
 	me = bot.get_me()
