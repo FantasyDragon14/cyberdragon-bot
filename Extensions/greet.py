@@ -69,6 +69,6 @@ async def member_left(event: hikari.MemberDeleteEvent)  -> None:
     logger.debug(f'user flags: {event.user.flags}')
     
     #TODO make this message customizable in settings, maybe even per server
-    msg = f"{event.user.mention} left"
+    msg = f"{event.user.display_name}({event.user.mention}) left"
     await event.app.rest.create_message(guild.system_channel_id, msg)
     pass
