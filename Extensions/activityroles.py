@@ -15,10 +15,11 @@ import datetime, math, re, os, sys
 import logging
 import tomlkit
 import pandas
+import Extensions.activity as Activity
 
 try: #adding Extensin-specific activity/status if status extension exists
     import Extensions.status as Status
-    Status.activities.append(hikari.Activity(name="your activity", type= hikari.ActivityType.WATCHING))
+    Status.activities.append(hikari.Activity(name="i can see you lurking ;3", type= hikari.ActivityType.CUSTOM))
 except: pass
 
 mode = "testing"
@@ -40,11 +41,11 @@ class Loader(commands.Loader):
         try:
             guilds_update_activity.start()
         except: logger.debug("didn't start activity updater")
-
+        
 loader = Loader()
 logger = logging.getLogger("activityroles")
 
-db_name = "activity_old"
+db_name = "activity"
 category = "activityroles"
 update_frequency = pandas.Timedelta(hours=1)
 if mode == 'testing':
@@ -59,10 +60,6 @@ gen_doc['update_freq'].comment('Format: ISO8601 timedelta. How much Time between
 guild_conf = {
                 'enabled': False,
                 'updateOnEvent': True,
-                'dataretention': {
-                        'total': pandas.Timedelta(days=30).isoformat(),
-                        'typing': pandas.Timedelta(days=5).isoformat(),
-                },
                 'score': {
                         'typing': 0,
                         'react': 1,
@@ -89,8 +86,7 @@ guild_conf = {
                     },
         }
 guild_doc = tomlkit.item(guild_conf)
-#doc['liveupdate'].comment('whether a members role should be updated as soon as activity is detected')
-guild_doc['dataretention'].comment('Format: ISO8601 timedelta')
+
 guild_doc['score'].comment('the scorepoints per logged activity of type. Score per message calculation ignores the value however (plan on changing that)')
 guild_doc['time_weight'].comment('Format: ISO8601 timedelta - float pairs. weight of messages younger than timedelta. needs to be odered correctly')
 guild_doc['level_score'].comment('minimum score required to reach a level (excluding lurking level). ignored by lurking (level -1)')
@@ -99,76 +95,12 @@ guild_doc['level_role'].comment('the discord role id for a certain level. will p
 # Data.default_config_general_set(category, gen_doc)
 Data.default_config_guild_set(category, guild_doc)
 
+
+
 def calculate_weight(words):
     #TODO i may need to revise this formula some time
     return round(math.log10(0.5*words + 1) * 10)
 
-class ActivityType(Enum):
-    """The type of activity a user did. for sending a message, that's MESSAGE, etc
-    Not to be confused by hikari.ActivityType
-    """
-    MESSAGE = 'msg'
-    VOICE = 'vce'
-    REACTION = 'rct'
-    TYPING = 'typ'
-    LURKING = 'lrk'
-class Activity():
-    type:ActivityType
-    description:str
-    guild:hikari.GatewayGuild|hikari.RESTGuild
-    member:hikari.Member
-    date:datetime.datetime
-    words:int
-    logged:bool
-
-    def __init__(self, member:hikari.guilds.Member, type:ActivityType, date:datetime.datetime, description:str= "", words:int=0, guild:hikari.GatewayGuild |hikari.RESTGuild | None=None):
-        """uh
-
-        Args:
-            member (hikari.guilds.Member): member who did it
-            type (ActivityType): Type of activity
-            date (datetime.datetime): the date and time the activity happened
-            words (int, optional): Number of words if the ActivityType is MESSAGE. Defaults to 0.
-            guild (hikari.GatewayGuild|hikari.RESTGuild, optional): we can get the guild from the member object, so idk why i even put this here. Defaults to None.
-        """        
-        if not guild: guild = member.get_guild()
-        self.guild = guild
-        self.member = member
-        self.type = type
-        self.description = description
-        self.date = date
-        
-        self.words = words
-        self.logged = False
-
-    async def log(self, cursor:sqlite3.Cursor = None, member_update:bool = False):
-        logger.debug(f"Attempting to log a {self.type.name} activity")
-        if cursor is None: cur = Data.get_guild_db(self.guild.id, db_name).cursor()
-        else: cur = cursor
-        await ensure_member_table(cur, str(self.member.id))
-        logger.debug('logging activity into table...')
-        query = f"""--sql
-                INSERT INTO {Data.member_table(str(self.member.id))} VALUES (
-                    ?,
-                    ?,
-                    unixepoch(?),
-                    ?
-                )
-                """
-        cur.execute(query, (
-            str(self.type.value),
-            str(self.description),
-            str(self.date),
-            int(self.words),)
-        )
-        logger.debug('query executed, update role: ' + str(member_update))
-        if member_update:
-            await activity_member_update(cur, guild=self.guild, member=self.member)
-        if cursor is None:
-            cur.connection.commit()
-            cur.connection.close()
-        logger.debug("Activity logged")
-        
 async def assert_activty_roles(guild:hikari.GatewayGuild|hikari.RESTGuild, cur:sqlite3.Cursor):
     """makes sure one activityrole per level in the config exists:
     - does the saved role id exist in the guild? if not make new role and save it
@@ -195,7 +127,6 @@ async def assert_activty_roles(guild:hikari.GatewayGuild|hikari.RESTGuild, cur:s
             logger.debug(f'created role {str(role)}')
         
     #was that everything?
-    
 
 async def activity_member_update(cur: sqlite3.Cursor, guild: hikari.GatewayGuild|hikari.RESTGuild, member:hikari.Member, level_role:dict=None):
     """updates a members activity. this includes pruning the db, recalculating the activity level and score and reassigning the activity role if necessary
@@ -237,9 +168,6 @@ async def activity_guild_update(guild:hikari.GatewayGuild|hikari.RESTGuild):
         await activity_member_update(cur, guild, members[member_id], level_role)
     cur.connection.close()
     
-    
-    
-
 def activity_calculation(cur:sqlite3.Cursor, member_table:str, guild_id:str, detail:bool=False) -> tuple:
     """calculates the activity level, score of a given members table
 
@@ -366,166 +294,11 @@ def activity_calculation(cur:sqlite3.Cursor, member_table:str, guild_id:str, det
     
     return level, score, info
 
-def user_getlastloggeddate(cur:sqlite3.Cursor, user_table:str):
-    """return the date of the last logged activity of a given user"""
-    query = f"""--sql
-            SELECT MAX(unix_date)
-            FROM {user_table}; 
-            """
-    cur.execute(query)
-    result = cur.fetchall()
-    return datetime.datetime.fromtimestamp(result[0])
-    #TODO Test this
-
-def guild_getlastloggeddate(cur:sqlite3.Cursor) -> datetime.datetime:
-    """return the date of the last logged date in a given db"""
-
-    cur.execute("""--sql
-        SELECT name FROM sqlite_schema WHERE type='table';
-        """)
-    result = cur.fetchall()
-    last_date = datetime.datetime.min
-    for table in result:
-        i = user_getlastloggeddate(cur=cur, user_table=table[0])
-        if i > last_date: last_date = i
-    return last_date
-    #TODO Test this
- 
-def prune_member_table(cur:sqlite3.Cursor, member_table:str, max_time: datetime.timedelta, typing_time:datetime.timedelta):
-    """deletes all rows from the members table where the timedelta between now and log-date is bigger than max_time
-    Commits when done
-
-        Args:
-            cur (sqlite.Cursor): the cursor to the db where the member table should be pruned
-            member_id (str): the id of the member whose table should be pruned
-            max_time (datetime.timedelta): the maximum timedelta a row is kept in the db
-            max_typing (datetime.timedelta): the maximum timedelta a typing activity is saved
-        """
-    if not Data.table_exists(cur, member_table): return
-    now = datetime.datetime.now(datetime.UTC)
-    query = f"""--sql
-            DELETE FROM {member_table} WHERE (
-                unixepoch(?) - unix_date > ?
-            )
-            """
-    cur.execute(query, ("now", max_time.total_seconds()))
-    
-    query = f"""--sql
-            DELETE FROM {member_table} WHERE (
-                unixepoch(?) - unix_date > ? AND
-                activity = ?
-            )
-            """
-    cur.execute(query, ('now', typing_time.total_seconds(), str(ActivityType.TYPING.value)))
-    
-    query = """--sql
-            
-            """
-    
-    cur.connection.commit()
-    logger.debug(f'pruned table {member_table}')
-       
-def prune_guild_db(guild_id:str, cursor:sqlite3.Cursor=None):
-    #for pruning the dbs without updating any roles
-    if cursor is None:
-        cur = Data.get_guild_db(guild_id, db_name).cursor()
-    else: cur = cursor
-    max_time = pandas.to_timedelta(Data.config_guild_get(str(guild_id), (category, "dataretention", "total"))).to_pytimedelta()
-    max_typing = pandas.to_timedelta(Data.config_guild_get(str(guild_id), (category, "dataretention", "typing"))).to_pytimedelta()
-    cur.execute("""--sql
-               SELECT name FROM sqlite_schema WHERE type='table';
-               """) #get all tables
-    for result in cur.fetchall():
-        prune_member_table(cur, result[0], max_time, max_typing)
-    if cursor is None:
-        cur.connection.close()
-    
-
-async def ensure_member_table(db_cursor:sqlite3.Cursor, member_id:str):
-    """ensures the table for a given member_id exists in the provided cursors databank
-        will donothing if it already exists, will create a new table if it doesn't exist
-    Args:
-        db_cursor (sqlite3.Cursor): a cursor to a activity-databank
-        member_id (str): the member_id to be checked
-    """
-    if not Data.table_exists(db_cursor, Data.member_table(member_id)):
-        # remember: How many columns do we really need?
-        query = f"""--sql
-                CREATE TABLE {Data.member_table(member_id)} (
-                    activity text,
-                    desc text,
-                    unix_date int,
-                    words int
-                )
-                """
-        db_cursor.execute(query)
-        
-async def index_guild(guild:hikari.GatewayGuild|hikari.RESTGuild, max_time:datetime.timedelta=None, replace:bool = False):
-    cur = Data.get_guild_db(guild.id, db_name).cursor()
-    logger.info(f'indexing Guild {guild.name} (id {guild.id}):')
-    if replace:
-        
-        logger.info('replacing all data, deleting old...')
-        cur.execute("""--sql
-               SELECT name FROM sqlite_schema WHERE type='table';
-               """)
-
-        result = cur.fetchall()
-        query = """--sql
-                DROP TABLE IF EXISTS ?
-                """
-        for r in result:
-            cur.execute(query, (r[0],))
-            logger.debug(str(r[0]))
-    if max_time is None:
-        max_time = pandas.to_timedelta(Data.config_guild_get(str(ctx.guild_id), (category, 'dataretention', 'total'))).to_pytimedelta()
-    #TODO get index_guild working
-    
-    channels = await guild.get_channels()
-    for channel_id in channels:
-        messageIterator = Data.bot.rest.fetch_messages(channels[channel_id])
-        
-    
-    members = set()
-    
-    cur.connection.close()
-
-async def index_channel(channel:hikari.TextableGuildChannel, users:set, max_time:datetime.timedelta, replace:bool=False):
-    channel
-
-def unlurk(cur:sqlite3.Cursor, table_name:str):
-    """Removes all lurk entries from a given databases table
-
-    Args:
-        cur (sqlite3.Cursor): cursor to the db
-        table_name (str): the name of the table to unlurk
-    """
-        
-    if mode == 'testing':
-        query = f"""--sql
-                SELECT * FROM {table_name} WHERE (
-                    activity = ?
-                )
-                """
-        cur.execute(query, (ActivityType.LURKING.value,))
-        result = cur.fetchall()
-        for r in result:
-            logger.debug(str(r))
-
-    query = f"""--sql
-                DELETE FROM {table_name} WHERE (
-                    activity = ?
-                )
-                """
-    cur.execute(query, (ActivityType.LURKING.value,))
-    cur.connection.commit()
-
 group = commands.Group('activityroles', 'the commands for the ActivityRoles extensions')
-            
 @group.register
 class Activity_update_CMD(
     commands.SlashCommand,
-    name="update-activity",
+    name="update",
     description="updates the activityroles",
     hooks=[commands.prefab.has_permissions(hikari.Permissions.ADMINISTRATOR)],
 ):
@@ -629,101 +402,11 @@ class get_activity_CMD(
         cur.connection.close()
         await ctx.respond(msg, user_mentions=True)
 
-@group.register
-class Index_CMD(
-    commands.SlashCommand,
-    name="index-activity",
-    description="goes through the entire guild and saves the activity",
-    hooks=[commands.prefab.has_permissions(hikari.Permissions.ADMINISTRATOR)],
-):
-    max_time = commands.integer("days", "how many days back the bot will index", default=-1)
-    replace = commands.boolean("replace", 'whether to replace the old data', default=False)
+@loader.listener(Activity.ActivityUpdate)
+async def update_roles(event: Activity.ActivityUpdate) -> None:
+    #TODO
+    pass      
 
-    @commands.invoke
-    async def invoke(self, ctx: commands.Context, bot:hikari.GatewayBot) -> None:
-        await ctx.respond('not implemented yet')
-        return
-        
-        response = await ctx.respond("indexing your server. this may take a bit...")
-        try:
-            await index_guild(ctx.member.get_guild(), self.max_time, self.replace)
-            await ctx.edit_response(response, "Server indexed successfully")
-        except:
-            await ctx.edit_response(response, "Something went wrong")
-
-@group.register
-class index_all_CMD(
-    commands.SlashCommand,
-    name="index-all",
-    description="goes through the entire guild and saves the activity",
-    hooks=[commands.prefab.owner_only],
-):
-    @commands.invoke
-    async def execute_for_all_guilds(self, ctx:commands.Context, bot: hikari.GatewayBot, client: commands.Client) -> None:
-        await ctx.respond('not implemented yet')
-        return
-    
-    
-        for guild in Data.get_guilds(bot):
-            logger.info(f"Indexing '{guild.name}' now")
-            await index_guild(guild)
-
-@loader.listener(hikari.StartedEvent)
-async def onStarted(event:hikari.StartedEvent):
-    logger.debug('starting activity updater')
-    guilds_update_activity.start()
-
-@loader.task(commands.uniformtrigger(seconds=update_frequency.seconds, wait_first=False), auto_start=False, max_failures=-1, max_invocations=-1)
-async def guilds_update_activity(bot: hikari.GatewayBot, client: commands.Client) -> None:
-    # call update_activity for all guilds
-    logger.info('updating activities')
-    
-    async for guild in bot.rest.fetch_my_guilds():
-        if not Data.config_guild_get(str(guild.id), (category, 'enabled',)):
-            logger.debug(f"roles not enabled for {guild.name}, just pruning the db")
-            prune_guild_db(str(guild.id))
-            continue
-        logger.debug(f"updating '{guild.name}' now")
-        guild = await guild.fetch_self()
-        await activity_guild_update(guild)
-        
-
-@loader.listener(hikari.GuildMessageCreateEvent)
-async def message_activity(event: hikari.GuildMessageCreateEvent) -> None:
-    if event.is_bot: return
-    guild = event.get_guild()
-    words = 1
-    if event.content:
-        words = Util.count_words(event.content)
-    logger.debug(f"message activity: {words} words, content:\n{event.content}")
-    liveupdate = Data.config_guild_get(str(event.guild_id), (category, 'updateOnEvent',))
-    if not Data.config_guild_get(str(event.guild_id), (category, 'enabled',)): liveupdate = False
-    await Activity(member=event.member, type=ActivityType.MESSAGE, date=datetime.datetime.now(datetime.UTC), words=words).log(member_update=liveupdate)
-
-@loader.listener(hikari.VoiceStateUpdateEvent)
-async def voice_activity(event: hikari.VoiceStateUpdateEvent) -> None:
-    if event.state.member.is_bot: return
-    liveupdate = Data.config_guild_get(str(event.guild_id), (category, 'updateOnEvent',))
-    if not Data.config_guild_get(str(event.guild_id), (category, 'enabled',)): liveupdate = False
-    logger.debug(f"voice activity: {event.state} (old: {event.old_state})")
-    if event.state.channel_id != None and event.old_state == None:
-        await Activity(event.state.member, ActivityType.VOICE, datetime.datetime.now(datetime.UTC), description="join").log(member_update=liveupdate)
-    if event.state.channel_id == None and event.old_state != None:
-        await Activity(event.state.member, ActivityType.VOICE, datetime.datetime.now(datetime.UTC), description="leave").log(member_update=liveupdate)
-    
-@loader.listener(hikari.GuildReactionAddEvent)
-async def reaction_activity(event: hikari.GuildReactionAddEvent) -> None:
-    if event.member.is_bot: return
-    liveupdate = Data.config_guild_get(str(event.guild_id), (category, 'updateOnEvent',))
-    if not Data.config_guild_get(str(event.guild_id), (category, 'enabled',)): liveupdate = False
-    await Activity(event.member, ActivityType.REACTION, datetime.datetime.now(datetime.UTC)).log(member_update=liveupdate)
-    
-@loader.listener(hikari.GuildTypingEvent)
-async def typing_activity(event:hikari.GuildTypingEvent) -> None:
-    if event.member.is_bot: return
-    liveupdate = Data.config_guild_get(str(event.guild_id), (category, 'updateOnEvent',))
-    if not Data.config_guild_get(str(event.guild_id), (category, 'enabled',)): liveupdate = False
-    await Activity(event.member, ActivityType.TYPING, datetime.datetime.now(datetime.UTC)).log(member_update=liveupdate)
 
 async def register_commands(guild_ids:list = []):
     if len(guild_ids) < 1:
@@ -733,33 +416,3 @@ async def register_commands(guild_ids:list = []):
     loader.command(command=group, guilds=guild_ids)
     loader.command(command=Unlurk_CMD, guilds=guild_ids)
     loader.command(command=Lurk_CMD, guilds=guild_ids)
-
-# CHecklist: ----------------------------------
-
-# # listeners: set up and working ( so far havent been able to reproduce database locked error)
-# commands: 
-#   - Lurk: working
-#   - UnLurk: check if working
-#
-#   - get avtivity: not pretty, but working make output prettier, i guess
-#   - Index: needs index_guild(cursor, guild, until_date) function
-#   - index all: check if it works after index_guild(cusor, guild, until_date) is complete
-#   other commands (maybe?):
-#       - update_guild (update every member)
-#       - update_user
-#       - delete_data
-
-# tasks:
-#   - refresh_roles_all -> for every guild go through every member and refresh the activityrole (prune db, new role)
-#       needs refresh_roles(guild) method
-
-#   - index_catchup -> task run once after starting to index all guilds until last logged message
-#       needs index_guild to work
-
-# functions:
-
-#   - index_all_guilds(bot) -> since i would need to write this twice, just write it once i guess
-
-#   - index_guild() --- this should make its own cursor, not need one
-
-#   - activity_member_update
