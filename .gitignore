@@ -1,6 +1,7 @@
 node_*
 token*
 .venv
+.vscode
 .linuxenv
 .env
 __pycache__

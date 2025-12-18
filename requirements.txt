@@ -5,3 +5,4 @@ python-dotenv
 tomlkit
 requests
 pandas
+sqlite-utils

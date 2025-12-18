@@ -13,6 +13,7 @@ import Util.data as Data
 
 #from bot import dev
 
+
 class CustomLoader(commands.Loader):
     async def remove_from_client(self, client: commands.Client) -> None:
         #unload / close db connections here?
@@ -20,19 +21,19 @@ class CustomLoader(commands.Loader):
         return await super().remove_from_client(client)
     
     async def add_to_client(self, client:commands.Client) -> None:
-        logger.info('adding testing extension')
-        await register_commands() #all current joined guilds
-        await super().add_to_client(client)
+        if Data.mode == 'testing':
+            logger.info('adding testing extension')
+            await register_commands() #all current joined guilds
+            await super().add_to_client(client)
 
-# loader = CustomLoader()
 loader = CustomLoader()
 logger = logging.getLogger("testing")
 
 # db = sqlite3.connect(os.path.join(".", Util.data.folder_data, Util.data.folder_misc, "test.db"))
 
-group = commands.Group('testing', 'all testing commands')
+group1 = commands.Group('testing', 'some testing commands')
 
-@group.register
+@group1.register
 class test(
     commands.SlashCommand,
     name="test",
@@ -49,7 +50,7 @@ class test(
         await ctx.edit_response(response, "test complete")
         logger.debug("test complete")
 
-@group.register
+@group1.register
 class get_channel_info_CMD(
     commands.SlashCommand,
     name="channelsinfo",
@@ -73,7 +74,7 @@ class get_channel_info_CMD(
         messages = [msg[:900]]
         await ctx.respond(messages[0])
         
-@group.register
+@group1.register
 class HelloWorld(
     commands.SlashCommand,
     name="hello-world",
@@ -103,13 +104,27 @@ class guild_specific_CMD(
         await ctx.defer()
         await ctx.respond('congrats: this guild is special!')
             
+group2 = commands.Group('toggleCMD', "testing if i can turn guild-specific commands on and off")
+
+@group2.register
+class Guild_CMD(
+    commands.SlashCommand,
+    name="disappear",
+    description='to test toggling commands for guilds',
+):
+    @commands.invoke
+    async def pong(self, ctx:commands.Context) -> None:
+        await ctx.defer()
+        await ctx.respond('congrats: this guild is special!')
+     
+
 async def register_commands(guild_ids:list=[]):
     if len(guild_ids) < 1:
         guilds_it = Data.bot.rest.fetch_my_guilds()
         async for guild in guilds_it:
             guild_ids.append(guild.id)
     print(guild_ids)
-    loader.command(command=group) #This works, but it's global
+    loader.command(command=group1) #This works, but it's global
     
     loader.command(command=non_global_CMD, guilds=guild_ids) #trying to have a command for all guilds, but not global (ik i could use hooks to fail in DM, this is just for testing)
     loader.command(command=guild_specific_CMD, guilds=[559366749762617344]) #trying a command for only one guild

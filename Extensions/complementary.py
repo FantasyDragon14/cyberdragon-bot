@@ -89,8 +89,3 @@ class Complement(
         await ctx.respond("complement sent <3", ephemeral=True)
         
         pass
-
-# i = 0
-# while i < 50:
-#     print(random.choice(compliments))
-#     i += 1

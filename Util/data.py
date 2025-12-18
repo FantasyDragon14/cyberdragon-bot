@@ -196,8 +196,8 @@ def table_exists(cur:sqlite3.Cursor, table_name:str) -> bool:
 async def get_guilds(bot: hikari.GatewayBot):
         "trying to get this to return a list of all guild items the bot is part of, but it doesn't seem to work"
         results =  [item async for item in bot.rest.fetch_my_guilds()]
-        print(type(results))
-        print(type(results[0]))
+        # print(type(results))
+        # print(type(results[0]))
         return results
         async for guild in bot.rest.fetch_my_guilds():
                 results.append(item)
